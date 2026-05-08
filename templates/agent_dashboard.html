@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代理控制台 - API中转站</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body { background: #f0f9f4; min-height: 100vh; margin: 0; font-family: 'PingFang SC', -apple-system, sans-serif; }
+        .header { background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+        .header a { color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 20px; font-size: 14px; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+        /* 统计卡片 */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+        .stat-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-label { font-size: 13px; color: #888; margin-bottom: 8px; font-weight: 500; }
+        .stat-value { font-size: 28px; font-weight: 800; color: #1a2e1a; }
+        .stat-value.green { color: #10B981; }
+        .stat-value.blue { color: #3B82F6; }
+        .stat-value.purple { color: #8B5CF6; }
+        .stat-sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+        /* 推荐码 */
+        .referral-box { background: linear-gradient(135deg, #10B981, #059669); border-radius: 16px; padding: 28px 32px; color: white; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; }
+        .referral-info h3 { margin: 0 0 4px; font-size: 16px; font-weight: 600; opacity: 0.9; }
+        .referral-code { font-size: 32px; font-weight: 800; letter-spacing: 4px; font-family: 'Courier New', monospace; }
+        .referral-hint { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+        .copy-btn { background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .copy-btn:hover { background: rgba(255,255,255,0.35); }
+
+        /* 面板 */
+        .panel { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 24px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #f0f9f4; }
+        .panel-title { font-size: 17px; font-weight: 700; color: #1a2e1a; }
+        .panel-title span { color: #10B981; }
+
+        /* 表格 */
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 12px 16px; background: #f8faf8; color: #666; font-weight: 600; border-bottom: 2px solid #e5e5e5; font-size: 13px; }
+        td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; color: #374151; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafafa; }
+        .badge-tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-green { background: #ECFDF5; color: #065f46; }
+        .badge-blue { background: #EFF6FF; color: #1e40af; }
+        .badge-amount { color: #10B981; font-weight: 700; }
+        .empty-state { text-align: center; padding: 48px; color: #aaa; font-size: 15px; }
+
+        .back-link { display: inline-block; margin-bottom: 20px; color: #10B981; text-decoration: none; font-size: 14px; }
+        .back-link:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .referral-box { flex-direction: column; gap: 20px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🌿 代理控制台</h1>
+    <div>
+        <a href="/dashboard">← 返回用户面板</a>
+    </div>
+</div>
+
+<div class="container">
+    <a href="/dashboard" class="back-link">← 返回用户面板</a>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">累计佣金收益</div>
+            <div class="stat-value green">¥{{ "%.2f"|format(total_commission) }}</div>
+            <div class="stat-sub">已到账余额</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">下线用户数</div>
+            <div class="stat-value blue">{{ downline_count }}</div>
+            <div class="stat-sub">已发展用户</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">佣金比例</div>
+            <div class="stat-value purple">{{ commission_rate }}%</div>
+            <div class="stat-sub">每笔充值提成</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">代理推荐码</div>
+            <div class="stat-value" style="font-size:20px; letter-spacing:2px;">{{ agent.referral_code }}</div>
+            <div class="stat-sub">推广使用</div>
+        </div>
+    </div>
+
+    <!-- 推荐码分享区 -->
+    <div class="referral-box">
+        <div class="referral-info">
+            <h3>🔗 你的专属推荐码</h3>
+            <div class="referral-code">{{ agent.referral_code }}</div>
+            <div class="referral-hint">新用户注册时填入此推荐码，自动成为你的下线</div>
+        </div>
+        <button class="copy-btn" onclick="copyCode()">📋 复制推荐码</button>
+    </div>
+
+    <!-- 佣金记录 -->
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title">💰 <span>佣金记录</span></div>
+            <div style="font-size:13px; color:#aaa;">最近20条</div>
+        </div>
+        {% if commissions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>下线用户</th>
+                    <th>充值金额</th>
+                    <th>佣金收益</th>
+                    <th>时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in commissions %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ c.username or c.user_id }}</td>
+                    <td>¥{{ "%.2f"|format(c.recharge_amount) }}</td>
+                    <td><span class="badge-amount">+¥{{ "%.4f"|format(c.commission) }}</span></td>
+                    <td style="color:#aaa; font-size:13px;">{{ c.created_at[:16] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            暂无佣金记录，<a href="/dashboard" style="color:#10B981;">去发展下线 →</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 如何推广 -->
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title">📖 <span>推广指南</span></div>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+            <div style="text-align:center; padding:20px;">
+                <div style="font-size:36px; margin-bottom:12px;">1️⃣</div>
+                <div style="font-weight:700; color:#1a2e1a; margin-bottom:8px;">复制推荐码</div>
+                <div style="font-size:13px; color:#666; line-height:1.6;">点击上方「复制推荐码」按钮，将你的专属码发给好友</div>
+            </div>
+            <div style="text-align:center; padding:20px;">
+                <div style="font-size:36px; margin-bottom:12px;">2️⃣</div>
+                <div style="font-weight:700; color:#1a2e1a; margin-bottom:8px;">好友注册</div>
+                <div style="font-size:13px; color:#666; line-height:1.6;">好友注册时填入推荐码，自动成为你的下线</div>
+            </div>
+            <div style="text-align:center; padding:20px;">
+                <div style="font-size:36px; margin-bottom:12px;">3️⃣</div>
+                <div style="font-weight:700; color:#1a2e1a; margin-bottom:8px;">躺着赚佣金</div>
+                <div style="font-size:13px; color:#666; line-height:1.6;">下线每次充值，你获得{{ commission_rate }}%佣金，自动到账</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyCode() {
+    const code = "{{ agent.referral_code }}";
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '✅ 已复制!';
+        setTimeout(() => { btn.textContent = '📋 复制推荐码'; }, 2000);
+    }).catch(() => {
+        prompt('请手动复制推荐码:', code);
+    });
+}
+</script>
+</body>
+</html>

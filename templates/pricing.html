@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>套餐价格 - API智 Hub</title>
+<style>
+:root{--primary:#6366F1;--primary-dark:#4F46E5;--bg:#F8FAFC;--surface:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);}
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:1.2rem;font-weight:800;color:var(--primary);text-decoration:none;}
+.nav-links{display:flex;gap:24px;list-style:none;}
+.nav-links a{text-decoration:none;color:var(--text-light);font-size:0.9rem;font-weight:500;}
+.nav-links a:hover{color:var(--primary);}
+.container{max-width:960px;margin:60px auto;padding:0 24px;}
+.page-title{text-align:center;font-size:2.2rem;font-weight:800;margin-bottom:8px;}
+.page-sub{text-align:center;color:var(--text-light);margin-bottom:48px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;}
+.card{background:var(--surface);border-radius:20px;padding:32px 24px;border:2px solid var(--border);text-align:center;transition:all 0.3s;}
+.card:hover{border-color:var(--primary);transform:translateY(-3px);}
+.card.popular{border-color:var(--primary);background:#EEF2FF;}
+.popular-badge{display:inline-block;background:var(--primary);color:white;padding:4px 16px;border-radius:20px;font-size:0.75rem;font-weight:700;margin-bottom:12px;}
+.card h3{font-size:1.1rem;font-weight:700;margin-bottom:8px;}
+.card .desc{font-size:0.85rem;color:var(--text-light);margin-bottom:16px;min-height:40px;}
+.price{font-size:2.2rem;font-weight:800;color:var(--primary);margin:12px 0 4px;}
+.price small{font-size:0.9rem;font-weight:500;color:var(--text-light);}
+.credits{font-size:0.82rem;color:var(--text-light);margin-bottom:20px;}
+.btn{display:inline-block;padding:10px 32px;border-radius:24px;font-weight:700;font-size:0.9rem;text-decoration:none;border:2px solid var(--primary);color:var(--primary);transition:all 0.2s;}
+.btn:hover{background:var(--primary);color:white;}
+.btn.filled{background:var(--primary);color:white;}
+.btn.filled:hover{background:var(--primary-dark);}
+.note{text-align:center;color:var(--text-light);font-size:0.88rem;margin-top:32px;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">⚡ API智 Hub</a>
+  <ul class="nav-links">
+    <li><a href="/">首页</a></li>
+    <li><a href="/docs">API文档</a></li>
+    <li><a href="/login">登录</a></li>
+    <li><a href="/register">注册</a></li>
+  </ul>
+</nav>
+<div class="container">
+  <div class="page-title">套餐价格</div>
+  <div class="page-sub">灵活计费，余额永不过期，适合各种规模的使用场景</div>
+  <div class="grid" id="pkgGrid"></div>
+  <div class="note">💳 所有套餐均支持支付宝支付 · 余额永不过期 · 客服微信：apihub001</div>
+</div>
+<script>
+fetch('/api/packages').then(r=>r.json()).then(j=>{
+  if(j.code!==0) return;
+  document.getElementById('pkgGrid').innerHTML=j.data.map((p,i)=>`
+    <div class="card ${i===1?'popular':''}">
+      ${i===1?'<div class="popular-badge">最受欢迎</div>':''}
+      <h3>${p.name}</h3>
+      <div class="desc">${p.description||''}</div>
+      <div class="price">¥${p.price}${p.price===0?'':'<small>元</small>'}</div>
+      <div class="credits">${p.credits>0?p.credits+' 额度点':'联系客服'}<br>有效期 ${p.validity_days} 天</div>
+      <a href="/register" class="btn ${i===1?'filled':''}">${p.price===0?'联系客服':'立即购买'}</a>
+    </div>
+  `).join('');
+});
+</script>
+</body>
+</html>

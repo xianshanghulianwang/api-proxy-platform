@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 - API智 Hub</title>
+<style>
+:root{--primary:#6366F1;--primary-dark:#4F46E5;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;--bg:#F1F5F9;--surface:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);}
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:1.2rem;font-weight:800;color:var(--primary);text-decoration:none;}
+.nav-right{display:flex;align-items:center;gap:16px;}
+.nav-right a{color:var(--text-light);text-decoration:none;font-size:0.9rem;}
+.nav-right a:hover{color:var(--primary);}
+.layout{display:flex;min-height:calc(100vh - 64px);}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;flex-shrink:0;}
+.sidebar-item{display:block;padding:11px 24px;color:var(--text-light);text-decoration:none;font-size:0.9rem;font-weight:500;transition:all 0.2s;border-left:3px solid transparent;}
+.sidebar-item:hover,.sidebar-item.active{background:#EEF2FF;color:var(--primary);border-left-color:var(--primary);}
+.main{flex:1;padding:32px;overflow:auto;}
+.page{display:none;}
+.page.active{display:block;}
+.page-header{margin-bottom:24px;}
+.page-header h2{font-size:1.4rem;font-weight:800;}
+.card{background:var(--surface);border-radius:16px;padding:28px;border:1px solid var(--border);margin-bottom:24px;}
+.card-title{font-size:1.05rem;font-weight:700;margin-bottom:20px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border-radius:16px;padding:20px;border:1px solid var(--border);}
+.stat-label{font-size:0.82rem;color:var(--text-light);margin-bottom:6px;}
+.stat-value{font-size:1.8rem;font-weight:800;color:var(--primary);}
+.stat-value.green{color:var(--success);}
+.stat-value.orange{color:var(--warning);}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:0.82rem;color:var(--text-light);font-weight:600;padding:10px 12px;border-bottom:2px solid var(--border);}
+td{padding:12px;font-size:0.88rem;border-bottom:1px solid var(--border);}
+tr:hover td{background:#F8FAFC;}
+.badge{padding:3px 10px;border-radius:12px;font-size:0.78rem;font-weight:600;}
+.badge-green{background:#DCFCE7;color:#166534;}
+.badge-red{background:#FEE2E2;color:#991B1B;}
+.badge-yellow{background:#FEF3C7;color:#92400E;}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+.form-item{display:flex;flex-direction:column;gap:6px;}
+.form-item label{font-size:0.82rem;font-weight:600;color:#374151;}
+.form-item input{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.9rem;font-family:inherit;outline:none;}
+.form-item input:focus{border-color:var(--primary);}
+.btn{padding:10px 20px;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:all 0.2s;}
+.btn-primary{background:var(--primary);color:white;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-danger{background:var(--danger);color:white;}
+.btn-danger:hover{background:#DC2626;}
+.del-btn{background:none;border:1px solid var(--border);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--danger);font-family:inherit;}
+.del-btn:hover{background:#FEE2E2;border-color:var(--danger);}
+.alert{padding:14px 18px;border-radius:12px;margin-bottom:20px;font-size:0.9rem;}
+.alert-red{background:#FEE2E2;border:1px solid #FECACA;color:#991B1B;}
+.alert-green{background:#DCFCE7;border:1px solid #BBF7D0;color:#166534;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">⚡ API智 Hub - 管理后台</a>
+  <div class="nav-right">
+    <a href="/dashboard">← 返回用户端</a>
+    <a href="#" onclick="logout()">退出</a>
+  </div>
+</nav>
+<div class="layout">
+  <div class="sidebar">
+    <a href="#" class="sidebar-item active" onclick="showPage('overview')">📊 数据概览</a>
+    <a href="#" class="sidebar-item" onclick="showPage('users')">👥 用户管理</a>
+    <a href="#" class="sidebar-item" onclick="showPage('apikeys')">🔑 上游Key管理</a>
+    <a href="#" class="sidebar-item" onclick="showPage('packages')">📦 套餐管理</a>
+    <a href="#" class="sidebar-item" onclick="showPage('agents')">🌿 代理管理</a>
+    <a href="#" class="sidebar-item" onclick="showPage('agent-config')">⚙️ 代理配置</a>
+  </div>
+  <div class="main">
+    <div class="page active" id="page-overview">
+      <div class="page-header"><h2>数据概览</h2></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">总用户数</div><div class="stat-value" id="sUsers">-</div></div>
+        <div class="stat-card"><div class="stat-label">7日活跃用户</div><div class="stat-value green" id="sActive">-</div></div>
+        <div class="stat-card"><div class="stat-label">总订单数</div><div class="stat-value orange" id="sOrders">-</div></div>
+        <div class="stat-card"><div class="stat-label">总收入(元)</div><div class="stat-value green" id="sRevenue">-</div></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">待处理订单</div><div class="stat-value orange" id="sPending">-</div></div>
+        <div class="stat-card"><div class="stat-label">总Token消耗</div><div class="stat-value" id="sTokens">-</div></div>
+      </div>
+    </div>
+    <div class="page" id="page-users">
+      <div class="page-header"><h2>用户管理</h2></div>
+      <div class="card">
+        <table id="usersTable">
+          <thead><tr><th>用户名</th><th>邮箱</th><th>手机</th><th>余额</th><th>配额</th><th>角色</th><th>注册时间</th><th>最后登录</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="page" id="page-apikeys">
+      <div class="page-header"><h2>上游 API Key 管理</h2></div>
+      <div class="alert alert-red" style="margin-bottom:20px;">⚠️ 上游API Key 用于实际转发请求，请妥善保管，切勿泄露。</div>
+      <div class="card">
+        <div class="card-title">添加上游 Key</div>
+        <div class="form-grid" id="keyForm">
+          <div class="form-item"><label>名称</label><input name="name" placeholder="如：MiniMax主Key"></div>
+          <div class="form-item"><label>供应商</label><input name="provider" placeholder="如：minimax"></div>
+          <div class="form-item"><label>API Key</label><input name="api_key" placeholder="sk-xxxx"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-item"><label>Base URL</label><input name="base_url" placeholder="https://api.minimax.chat/v1"></div>
+          <div class="form-item"><label>默认模型</label><input name="model" placeholder="MiniMax-Text-01"></div>
+          <div class="form-item"><label>单价(元/千Token)</label><input name="price_per_1k" type="number" step="0.001" value="0" placeholder="0.001"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addApiKey()">添加 Key</button>
+        <div id="keyMsg" class="alert" style="display:none;margin-top:16px;"></div>
+      </div>
+      <div class="card">
+        <table id="keysTable">
+          <thead><tr><th>名称</th><th>供应商</th><th>模型</th><th>单价</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="page" id="page-packages">
+      <div class="page-header"><h2>套餐管理</h2></div>
+      <div class="card">
+        <div class="card-title">添加套餐</div>
+        <div class="form-grid" id="pkgForm">
+          <div class="form-item"><label>套餐名称</label><input name="name" placeholder="如：基础版"></div>
+          <div class="form-item"><label>价格(元)</label><input name="price" type="number" step="0.01" placeholder="49.00"></div>
+          <div class="form-item"><label>额度点数</label><input name="credits" type="number" placeholder="1000"></div>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="form-item"><label>描述</label><input name="description" placeholder="适合轻度使用"></div>
+          <div class="form-item"><label>有效期(天)</label><input name="validity_days" type="number" value="30"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addPackage()">添加套餐</button>
+        <div id="pkgMsg" class="alert" style="display:none;margin-top:16px;"></div>
+      </div>
+      <div class="card">
+        <table id="pkgsTable">
+          <thead><tr><th>套餐名称</th><th>描述</th><th>价格</th><th>额度</th><th>有效期</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 代理列表 -->
+    <div class="page" id="page-agents">
+      <div class="page-header"><h2>🌿 代理管理</h2></div>
+      <div class="card">
+        <div id="agentStatRow" class="stats-grid" style="margin-bottom:20px;"></div>
+        <table id="agentsTable">
+          <thead><tr><th>用户名</th><th>推荐码</th><th>佣金比例</th><th>累计佣金</th><th>下线数</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">💰 佣金记录</div>
+        <table id="commissionsTable">
+          <thead><tr><th>代理</th><th>下线用户</th><th>充值金额</th><th>佣金</th><th>时间</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 代理配置 -->
+    <div class="page" id="page-agent-config">
+      <div class="page-header"><h2>⚙️ 代理系统配置</h2></div>
+      <div class="card">
+        <div class="card-title">基础设置</div>
+        <div class="form-grid">
+          <div class="form-item">
+            <label>代理入驻费（元）</label>
+            <input id="cfg-entry-fee" type="number" step="1" min="0" placeholder="299">
+          </div>
+          <div class="form-item">
+            <label>默认佣金比例（填写0.1 = 10%）</label>
+            <input id="cfg-commission-rate" type="number" step="0.01" min="0" max="1" placeholder="0.10">
+          </div>
+          <div class="form-item">
+            <label>开启代理系统</label>
+            <select id="cfg-enabled" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.9rem;font-family:inherit;outline:none;">
+              <option value="true">✅ 开启</option>
+              <option value="false">❌ 关闭</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveAgentConfig()">保存配置</button>
+        <div id="cfgMsg" class="alert" style="display:none;margin-top:16px;"></div>
+      </div>
+      <div class="alert alert-green" style="margin-top:8px; line-height:1.8;">
+        <strong>代理入驻费：</strong>用户缴费后才能成为代理<br>
+        <strong>佣金比例：</strong>代理发展的下线充值时，代理获得的分成比例（0.10 = 10%）<br>
+        <strong>示例：</strong>佣金比例10%，下线充值100元，代理获得10元佣金，自动到账
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+async function checkAdmin() {
+  const r = await fetch('/api/user/info');
+  const j = await r.json();
+  if (j.code !== 0 || j.data.role !== 'admin') window.location.href = '/login';
+}
+async function loadOverview() {
+  const r = await fetch('/api/admin/overview');
+  const j = await r.json();
+  if (j.code !== 0) return;
+  const d = j.data;
+  document.getElementById('sUsers').textContent = d.total_users;
+  document.getElementById('sActive').textContent = d.active_users_7d;
+  document.getElementById('sOrders').textContent = d.total_orders;
+  document.getElementById('sRevenue').textContent = '¥' + d.total_revenue.toFixed(2);
+  document.getElementById('sPending').textContent = d.pending_orders;
+  document.getElementById('sTokens').textContent = d.total_tokens.toLocaleString();
+}
+async function loadUsers() {
+  const r = await fetch('/api/admin/users');
+  const j = await r.json();
+  if (j.code !== 0) return;
+  document.querySelector('#usersTable tbody').innerHTML = j.data.map(u => '<tr><td><strong>'+u.username+'</strong></td><td>'+(u.email||'-')+'</td><td>'+(u.phone||'-')+'</td><td>¥'+parseFloat(u.balance).toFixed(2)+'</td><td>'+u.api_quota+'</td><td><span class="badge '+(u.role==='admin'?'badge-red':'badge-green')+'">'+u.role+'</span></td><td>'+(u.created_at||'').substring(0,10)+'</td><td>'+(u.last_login||'从未').substring(0,19)+'</td></tr>').join('');
+}
+async function loadApiKeys() {
+  const r = await fetch('/api/admin/api-keys');
+  const j = await r.json();
+  if (j.code !== 0) return;
+  document.querySelector('#keysTable tbody').innerHTML = j.data.map(k => '<tr><td>'+k.name+'</td><td>'+k.provider+'</td><td>'+(k.model||'-')+'</td><td>¥'+parseFloat(k.price_per_1k).toFixed(4)+'/千Token</td><td><span class="badge '+(k.is_active?'badge-green':'badge-red')+'">'+(k.is_active?'启用':'禁用')+'</span></td><td><button class="del-btn" onclick="delApiKey(\''+k.id+'\')">删除</button></td></tr>').join('');
+}
+async function addApiKey() {
+  const fd = new FormData();
+  ['name','provider','api_key','base_url','model'].forEach(n => fd.append(n, document.querySelector('[name="'+n+'"]').value));
+  fd.append('price_per_1k', parseFloat(document.querySelector('[name="price_per_1k"]').value||0));
+  const r = await fetch('/api/admin/api-keys', {method:'POST', body:fd});
+  const j = await r.json();
+  const msg = document.getElementById('keyMsg');
+  msg.textContent = j.code===0?'添加成功':(j.msg||'失败');
+  msg.className = 'alert '+(j.code===0?'alert-green':'alert-red');
+  msg.style.display='block';
+  if (j.code===0) { loadApiKeys(); ['name','provider','api_key','base_url','model','price_per_1k'].forEach(n => document.querySelector('[name="'+n+'"]').value=''); }
+  setTimeout(()=>msg.style.display='none',3000);
+}
+async function delApiKey(id) { if(confirm('确认删除?')) { await fetch('/api/admin/api-keys/'+id,{method:'DELETE'}); loadApiKeys(); } }
+async function loadPackages() {
+  const r = await fetch('/api/admin/packages');
+  const j = await r.json();
+  if (j.code !== 0) return;
+  document.querySelector('#pkgsTable tbody').innerHTML = j.data.map(p => '<tr><td><strong>'+p.name+'</strong></td><td>'+(p.description||'-')+'</td><td>¥'+parseFloat(p.price).toFixed(2)+'</td><td>'+p.credits+'</td><td>'+p.validity_days+'天</td><td><span class="badge '+(p.is_active?'badge-green':'badge-red')+'">'+(p.is_active?'启用':'禁用')+'</span></td><td><button class="del-btn" onclick="delPackage(\''+p.id+'\')">禁用</button></td></tr>').join('');
+}
+async function addPackage() {
+  const fd = new FormData();
+  ['name','description'].forEach(n => fd.append(n, document.querySelector('#pkgForm [name="'+n+'"]').value));
+  fd.append('price', parseFloat(document.querySelector('#pkgForm [name="price"]').value||0));
+  fd.append('credits', parseInt(document.querySelector('#pkgForm [name="credits"]').value||0));
+  fd.append('validity_days', parseInt(document.querySelector('#pkgForm [name="validity_days"]').value||30));
+  const r = await fetch('/api/admin/packages',{method:'POST',body:fd});
+  const j = await r.json();
+  const msg = document.getElementById('pkgMsg');
+  msg.textContent = j.code===0?'添加成功':(j.msg||'失败');
+  msg.className = 'alert '+(j.code===0?'alert-green':'alert-red');
+  msg.style.display='block';
+  if (j.code===0) loadPackages();
+  setTimeout(()=>msg.style.display='none',3000);
+}
+async function delPackage(id) { if(confirm('确认禁用此套餐?')) { await fetch('/api/admin/packages/'+id,{method:'DELETE'}); loadPackages(); } }
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(a=>a.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(event&&event.target) event.target.classList.add('active');
+  if(name==='overview') loadOverview();
+  if(name==='users') loadUsers();
+  if(name==='apikeys') loadApiKeys();
+  if(name==='packages') loadPackages();
+  if(name==='agents') { loadAgents(); loadCommissions(); }
+  if(name==='agent-config') loadAgentConfig();
+}
+async function logout() { await fetch('/api/auth/logout',{method:'POST'}); window.location.href='/login'; }
+
+// ===== 代理管理 =====
+async function loadAgentConfig() {
+  const r = await fetch('/api/admin/agent-config');
+  const j = await r.json();
+  if (j.error) return;
+  document.getElementById('cfg-entry-fee').value = j.agent_entry_fee;
+  document.getElementById('cfg-commission-rate').value = j.agent_default_commission_rate;
+  document.getElementById('cfg-enabled').value = j.agent_enabled;
+}
+async function saveAgentConfig() {
+  const enabled = document.getElementById('cfg-enabled').value === 'true';
+  const entry_fee = parseFloat(document.getElementById('cfg-entry-fee').value || 0);
+  const commission_rate = parseFloat(document.getElementById('cfg-commission-rate').value || 0.10);
+  const fd = new FormData();
+  fd.append('enabled', enabled);
+  fd.append('entry_fee', entry_fee);
+  fd.append('commission_rate', commission_rate);
+  const r = await fetch('/api/admin/agent-config', {method:'POST', body:fd});
+  const j = await r.json();
+  const msg = document.getElementById('cfgMsg');
+  msg.textContent = j.success ? '配置已保存' : (j.error || '保存失败');
+  msg.className = 'alert ' + (j.success ? 'alert-green' : 'alert-red');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+}
+async function loadAgents() {
+  const r = await fetch('/api/admin/agents?limit=50');
+  const j = await r.json();
+  const statRow = document.getElementById('agentStatRow');
+  if (j.agents && j.agents.length > 0) {
+    const totalCommission = j.agents.reduce((s, a) => s + (a.total_commission || 0), 0);
+    const totalDownlines = j.agents.reduce((s, a) => s + (a.total_downlines || 0), 0);
+    statRow.innerHTML = `
+      <div class="stat-card"><div class="stat-label">代理总数</div><div class="stat-value green">${j.agents.length}</div></div>
+      <div class="stat-card"><div class="stat-label">累计佣金总额</div><div class="stat-value orange">¥${totalCommission.toFixed(2)}</div></div>
+      <div class="stat-card"><div class="stat-label">下线用户总数</div><div class="stat-value">${totalDownlines}</div></div>
+    `;
+  }
+  document.querySelector('#agentsTable tbody').innerHTML = (j.agents || []).map(a => `
+    <tr>
+      <td><strong>${a.username}</strong></td>
+      <td><span style="font-family:monospace;font-weight:700;color:#10B981;">${a.referral_code}</span></td>
+      <td>${((a.commission_rate || 0.10)*100).toFixed(0)}%</td>
+      <td style="color:#10B981;font-weight:700;">¥${(a.total_commission||0).toFixed(4)}</td>
+      <td>${a.total_downlines || 0}</td>
+      <td><span class="badge ${a.status==='active'?'badge-green':'badge-red'}">${a.status==='active'?'正常':'禁用'}</span></td>
+      <td>${(a.created_at||'').substring(0,10)}</td>
+      <td>
+        <button class="del-btn" style="margin-right:4px;" onclick="promptRate('${a.id}', ${a.commission_rate || 0.10})">改佣金</button>
+        <button class="del-btn" onclick="toggleAgentStatus('${a.id}', '${a.status}')">${a.status==='active'?'禁用':'启用'}</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:#aaa;">暂无代理</td></tr>';
+}
+async function loadCommissions() {
+  const r = await fetch('/api/admin/commissions?limit=30');
+  const j = await r.json();
+  document.querySelector('#commissionsTable tbody').innerHTML = (j.commissions || []).map(c => `
+    <tr>
+      <td><strong>${c.agent_code || c.agent_id}</strong></td>
+      <td>${c.username || c.user_id || '-'}</td>
+      <td>¥${(c.recharge_amount || 0).toFixed(2)}</td>
+      <td style="color:#10B981;font-weight:700;">+¥${(c.commission || 0).toFixed(4)}</td>
+      <td style="color:#aaa;font-size:12px;">${(c.created_at||'').substring(0,16)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#aaa;">暂无记录</td></tr>';
+}
+function promptRate(agentId, currentRate) {
+  const rate = parseFloat(prompt('设置佣金比例（0.10 = 10%）:', currentRate));
+  if (!isNaN(rate) && rate >= 0 && rate <= 1) {
+    fetch('/api/admin/agents/' + agentId + '/commission-rate', {
+      method: 'POST',
+      body: new URLSearchParams({rate: rate})
+    }).then(() => loadAgents());
+  }
+}
+function toggleAgentStatus(agentId, currentStatus) {
+  if (!confirm('确认' + (currentStatus === 'active' ? '禁用' : '启用') + '此代理?')) return;
+  fetch('/api/admin/agents/' + agentId + '/status', {
+    method: 'POST',
+    body: new URLSearchParams({status: currentStatus === 'active' ? 'disabled' : 'active'})
+  }).then(() => loadAgents());
+}
+
+checkAdmin().then(()=>{loadOverview();loadUsers();loadApiKeys();loadPackages();});
+
+</body>
+</html>

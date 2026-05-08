@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API智 Hub - AI API 中转平台</title>
+<style>
+  :root {
+    --primary: #6366F1;
+    --primary-dark: #4F46E5;
+    --accent: #F59E0B;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --text: #1E293B;
+    --text-light: #64748B;
+    --border: #E2E8F0;
+    --success: #10B981;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { font-size: 1.3rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a { text-decoration: none; color: var(--text-light); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--primary); }
+  .nav-cta { background: var(--primary); color: #fff; padding: 8px 20px; border-radius: 24px; font-weight: 600; font-size: 0.85rem; text-decoration: none; transition: background 0.2s; }
+  .nav-cta:hover { background: var(--primary-dark); }
+  .nav-auth { display: flex; gap: 12px; align-items: center; }
+  .nav-auth a { text-decoration: none; color: var(--text-light); font-size: 0.9rem; font-weight: 500; }
+  .nav-auth a:hover { color: var(--primary); }
+
+  .hero { padding: 130px 0 80px; background: linear-gradient(135deg, #EEF2FF 0%, #F8FAFC 100%); position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%); border-radius: 50%; }
+  .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #EEF2FF; color: var(--primary); padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; }
+  .hero h1 { font-size: 2.8rem; font-weight: 800; line-height: 1.2; margin-bottom: 16px; background: linear-gradient(135deg, var(--primary-dark), #818CF8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p { font-size: 1.05rem; color: var(--text-light); margin-bottom: 32px; max-width: 480px; }
+  .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+  .btn-primary { background: var(--primary); color: #fff; padding: 14px 32px; border-radius: 32px; font-weight: 700; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border: none; cursor: pointer; }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+  .btn-outline { background: transparent; color: var(--primary); padding: 14px 32px; border-radius: 32px; font-weight: 700; font-size: 1rem; text-decoration: none; border: 2px solid var(--primary); display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; cursor: pointer; }
+  .btn-outline:hover { background: var(--primary); color: #fff; }
+  .hero-stats { display: flex; gap: 40px; margin-top: 48px; }
+  .stat-num { font-size: 2rem; font-weight: 800; color: var(--primary); }
+  .stat-label { font-size: 0.85rem; color: var(--text-light); }
+  .hero-code { background: #1E1B4B; border-radius: 16px; padding: 28px; color: #E0E7FF; font-family: 'Courier New', monospace; font-size: 0.85rem; box-shadow: 0 20px 48px rgba(79,70,229,0.2); }
+  .code-comment { color: #6B7280; }
+  .code-key { color: #A78BFA; }
+  .code-str { color: #34D399; }
+  .code-url { color: #60A5FA; }
+  .code-header { color: #F472B6; }
+
+  .section { padding: 80px 0; }
+  .section-label { text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+  .section-title { text-align: center; font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
+  .section-sub { text-align: center; color: var(--text-light); font-size: 1rem; max-width: 560px; margin: 0 auto 56px; }
+
+  .features { background: var(--surface); }
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .feature-card { background: var(--bg); border-radius: 20px; padding: 32px; border: 1px solid var(--border); transition: all 0.3s; }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.08); border-color: var(--primary); }
+  .feature-icon { width: 52px; height: 52px; border-radius: 14px; background: #EEF2FF; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 18px; }
+  .feature-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+  .feature-card p { font-size: 0.88rem; color: var(--text-light); line-height: 1.7; }
+
+  .pricing { background: var(--bg); }
+  .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .price-card { background: var(--surface); border-radius: 20px; padding: 32px 24px; border: 2px solid var(--border); transition: all 0.3s; text-align: center; }
+  .price-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+  .price-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .price-amount { font-size: 2.2rem; font-weight: 800; color: var(--primary); margin: 16px 0 4px; }
+  .price-amount small { font-size: 0.9rem; font-weight: 500; color: var(--text-light); }
+  .price-credits { font-size: 0.85rem; color: var(--text-light); margin-bottom: 20px; }
+  .price-btn { display: block; padding: 11px; border-radius: 24px; font-weight: 700; font-size: 0.9rem; text-decoration: none; border: 2px solid var(--primary); color: var(--primary); transition: all 0.2s; }
+  .price-btn:hover { background: var(--primary); color: #fff; }
+  .price-btn.popular { background: var(--primary); color: #fff; }
+  .price-btn.popular:hover { background: var(--primary-dark); }
+
+  .models { background: var(--surface); }
+  .models-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .model-item { padding: 20px; border-radius: 14px; background: var(--bg); border: 1px solid var(--border); text-align: center; transition: all 0.2s; }
+  .model-item:hover { border-color: var(--primary); background: #EEF2FF; }
+  .model-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+  .model-price { font-size: 0.8rem; color: var(--text-light); }
+
+  .cta { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: #fff; text-align: center; padding: 80px 0; }
+  .cta h2 { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
+  .cta p { opacity: 0.85; margin-bottom: 32px; font-size: 1rem; }
+  .cta .btn-primary { background: #fff; color: var(--primary); font-size: 1.05rem; }
+  .cta .btn-primary:hover { background: #F8FAFC; }
+
+  footer { background: #0F172A; color: rgba(255,255,255,0.5); padding: 48px 0 24px; }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+  .footer-brand h3 { color: #fff; font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; }
+  .footer-brand p { font-size: 0.88rem; line-height: 1.7; }
+  .footer-col h4 { color: #fff; font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 10px; }
+  .footer-col a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.88rem; transition: color 0.2s; }
+  .footer-col a:hover { color: #fff; }
+  .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: center; font-size: 0.82rem; }
+
+  @media (max-width: 768px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr 1fr; }
+    .models-grid { grid-template-columns: 1fr 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="container nav-inner">
+    <a href="/" class="logo">⚡ API智 Hub</a>
+    <ul class="nav-links">
+      <li><a href="#features">功能特点</a></li>
+      <li><a href="#pricing">套餐价格</a></li>
+      <li><a href="/docs">API文档</a></li>
+      <li><a href="#models">支持模型</a></li>
+    </ul>
+    <div class="nav-auth">
+      <a href="/login">登录</a>
+      <a href="/register" class="nav-cta">立即注册</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">🚀 5000+ 开发者正在使用</div>
+        <h1>AI API 中转平台<br>稳定、快速、便宜</h1>
+        <p>聚合 MiniMax、DeepSeek、火山引擎等顶级模型，提供 OpenAI 兼容接口，免翻墙访问，按量计费，余额永不过期。</p>
+        <div class="hero-btns">
+          <a href="/register" class="btn-primary">免费注册 →</a>
+          <a href="/docs" class="btn-outline">查看API文档</a>
+        </div>
+        <div class="hero-stats">
+          <div><div class="stat-num">99.9%</div><div class="stat-label">服务可用性</div></div>
+          <div><div class="stat-num">50ms</div><div class="stat-label">平均响应</div></div>
+          <div><div class="stat-num">¥0</div><div class="stat-label">月费/注册费</div></div>
+        </div>
+      </div>
+      <div class="hero-code">
+        <div class="code-comment"># OpenAI 兼容接口</div>
+        <div class="code-comment"># 一行代码切换，零侵入</div><br>
+        <span class="code-header">import</span> openai<br><br>
+        openai.api_base = <span class="code-str">"https://你的域名/v1"</span><br>
+        openai.api_key = <span class="code-str">"你的API密钥"</span><br><br>
+        chat = openai.ChatCompletion.create(<br>
+        &nbsp;&nbsp;model=<span class="code-str">"MiniMax-Text-01"</span>,<br>
+        &nbsp;&nbsp;messages=[{<span class="code-key">"role"</span>: <span class="code-str">"user"</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-key">"content"</span>: <span class="code-str">"你好"</span>}]<br>
+        )<br><br>
+        <span class="code-comment"># print(chat.choices[0].message.content)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section features" id="features">
+  <div class="container">
+    <div class="section-label">核心优势</div>
+    <div class="section-title">为什么选择我们</div>
+    <div class="section-sub">技术领先，服务稳定，价格实惠</div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>OpenAI 兼容接口</h3>
+        <p>完全兼容 OpenAI API 格式，修改一行代码即可接入。支持 GPT/Claude/DeepSeek 等主流模型，无需额外 SDK。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>极速响应</h3>
+        <p>多节点部署，智能路由选择最优线路。国内访问平均延迟低于 50ms，比官方直连快 3-5 倍。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>灵活计费</h3>
+        <p>按量计费，余额永不过期。支持充值和套餐购买，适合各种规模的使用场景。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>安全可靠</h3>
+        <p>所有请求走 HTTPS 加密传输，密钥隔离存储，每日用量实时统计，支持用量预警。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>用量可视化</h3>
+        <p>详细的使用记录和费用报表，随时查看调用量、token消耗和账户余额，数据透明。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>多模型支持</h3>
+        <p>聚合 MiniMax、DeepSeek、火山引擎等多个供应商接口，一个账号访问全部模型。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section pricing" id="pricing">
+  <div class="container">
+    <div class="section-label">套餐价格</div>
+    <div class="section-title">按需选择，灵活付费</div>
+    <div class="section-sub">无月费，按实际消耗计费，余额永不过期</div>
+    <div class="pricing-grid" id="pricingGrid">
+      <div style="text-align:center;padding:40px;color:var(--text-light)">加载中...</div>
+    </div>
+    <div style="text-align:center;margin-top:32px;">
+      <a href="/pricing" class="btn-outline" style="display:inline-flex;">查看全部套餐 →</a>
+    </div>
+  </div>
+</section>
+
+<section class="section models" id="models">
+  <div class="container">
+    <div class="section-label">支持模型</div>
+    <div class="section-title">覆盖主流大模型</div>
+    <div class="section-sub">持续接入最新模型，一个平台全部搞定</div>
+    <div class="models-grid">
+      <div class="model-item"><div class="model-name">MiniMax-Text</div><div class="model-price">¥0/千tokens起</div></div>
+      <div class="model-item"><div class="model-name">DeepSeek-V3</div><div class="model-price">¥0/千tokens起</div></div>
+      <div class="model-item"><div class="model-name">Doubao-Pro</div><div class="model-price">¥0/千tokens起</div></div>
+      <div class="model-item"><div class="model-name">更多模型...</div><div class="model-price">持续接入中</div></div>
+    </div>
+    <div style="text-align:center;margin-top:32px;">
+      <a href="/docs" class="btn-outline" style="display:inline-flex;">阅读API文档 →</a>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <h2>立即开始使用</h2>
+    <p>注册即送体验额度，5分钟接入，永久无需翻墙</p>
+    <a href="/register" class="btn-primary">免费注册获取 API Key →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>⚡ API智 Hub</h3>
+        <p>专业 AI API 中转平台，为开发者提供稳定、快速、便宜的 AI 模型调用服务。</p>
+      </div>
+      <div class="footer-col">
+        <h4>产品</h4>
+        <ul>
+          <li><a href="#features">功能特点</a></li>
+          <li><a href="#pricing">套餐价格</a></li>
+          <li><a href="/docs">API文档</a></li>
+          <li><a href="#models">支持模型</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>支持</h4>
+        <ul>
+          <li><a href="#">常见问题</a></li>
+          <li><a href="#">服务条款</a></li>
+          <li><a href="#">隐私政策</a></li>
+          <li><a href="#">联系客服</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>联系我们</h4>
+        <ul>
+          <li><a href="#">support@apihub.com</a></li>
+          <li><a href="#">微信：apihub001</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 API智 Hub · 让 AI 调用更简单
+    </div>
+  </div>
+</footer>
+
+<script>
+async function loadPackages() {
+  try {
+    const res = await fetch('/api/packages');
+    const json = await res.json();
+    if (json.code === 0) {
+      const grid = document.getElementById('pricingGrid');
+      grid.innerHTML = json.data.map((p, i) => `
+        <div class="price-card">
+          <h3>${p.name}</h3>
+          <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:8px;">${p.description || ''}</p>
+          <div class="price-amount">¥${p.price}${p.price === 0 ? '' : '<small>元</small>'}</div>
+          <div class="price-credits">${p.credits > 0 ? p.credits + ' 额度点' : '联系客服'}</div>
+          <div style="font-size:0.78rem;color:var(--text-light);margin-bottom:16px;">有效期 ${p.validity_days} 天</div>
+          <a href="/register" class="price-btn ${i === 1 ? 'popular' : ''}">${p.price === 0 ? '联系客服' : '立即购买'}</a>
+        </div>
+      `).join('');
+    }
+  } catch(e) {}
+}
+loadPackages();
+</script>
+</body>
+</html>

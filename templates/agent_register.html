@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代理申请 - API中转站</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body { background: #f0f9f4; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+        .agent-card { background: white; border-radius: 20px; padding: 48px 56px; max-width: 520px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+        .badge { background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 4px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 16px; }
+        h1 { margin: 0 0 8px; color: #1a2e1a; font-size: 28px; }
+        .subtitle { color: #666; margin-bottom: 32px; font-size: 15px; }
+        .fee-box { background: linear-gradient(135deg, #ECFDF5, #D1FAE5); border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 32px; border: 2px solid #10B981; }
+        .fee-label { font-size: 14px; color: #065f46; font-weight: 600; margin-bottom: 4px; }
+        .fee-amount { font-size: 48px; font-weight: 800; color: #10B981; }
+        .fee-unit { font-size: 16px; color: #065f46; }
+        .fee-note { font-size: 13px; color: #065f46; margin-top: 8px; opacity: 0.8; }
+        .benefits { margin-bottom: 32px; }
+        .benefit { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .benefit:last-child { border-bottom: none; }
+        .benefit-icon { width: 36px; height: 36px; background: #ECFDF5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .benefit-text { font-size: 14px; color: #374151; }
+        .benefit-text strong { color: #1a2e1a; }
+        .btn-apply { width: 100%; padding: 16px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.1s; }
+        .btn-apply:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(16,185,129,0.4); }
+        .btn-apply:active { transform: translateY(0); }
+        .btn-apply:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        .pending-note { background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 12px; padding: 16px; text-align: center; color: #92400e; font-size: 14px; margin-bottom: 24px; }
+        .already-agent { text-align: center; padding: 40px; }
+        .already-agent a { color: #10B981; font-weight: 600; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="agent-card">
+    <div class="badge">🌿 代理计划</div>
+    <h1>成为代理合作伙伴</h1>
+    <p class="subtitle">发展下线用户，赚取持续佣金收益</p>
+
+    <div class="fee-box">
+        <div class="fee-label">入驻费用</div>
+        <div class="fee-amount">¥{{ entry_fee }}<span class="fee-unit"> 元</span></div>
+        <div class="fee-note">一次性费用，永久代理资格 · 佣金提现秒到账</div>
+    </div>
+
+    <div class="benefits">
+        <div class="benefit">
+            <div class="benefit-icon">💰</div>
+            <div class="benefit-text"><strong>下级充值佣金</strong> — 下线每次充值你获得佣金分成</div>
+        </div>
+        <div class="benefit">
+            <div class="benefit-icon">👥</div>
+            <div class="benefit-text"><strong>下线不限</strong> — 发展的用户数量无上限</div>
+        </div>
+        <div class="benefit">
+            <div class="benefit-icon">📊</div>
+            <div class="benefit-text"><strong>专属控制台</strong> — 查看下线、佣金明细、提现记录</div>
+        </div>
+        <div class="benefit">
+            <div class="benefit-icon">🔗</div>
+            <div class="benefit-text"><strong>专属推荐链接</strong> — 每个代理有独立推荐码</div>
+        </div>
+    </div>
+
+    {% if pending %}
+    <div class="pending-note">
+        ⏳ 您有待处理的入驻订单，请先完成支付
+    </div>
+    {% endif %}
+
+    <button class="btn-apply" id="applyBtn" onclick="applyAgent()">
+        {% if pending %}去支付入驻费 →{% else %}立即申请代理资格 →{% endif %}
+    </button>
+</div>
+
+<script>
+async function applyAgent() {
+    const btn = document.getElementById('applyBtn');
+    btn.disabled = true;
+    btn.textContent = '正在创建订单...';
+    try {
+        const resp = await fetch('/api/agent/apply', { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+            // 跳转到支付页面
+            window.location.href = data.pay_url;
+        } else {
+            alert(data.error || '申请失败');
+            btn.disabled = false;
+            btn.textContent = '立即申请代理资格 →';
+        }
+    } catch (e) {
+        alert('网络错误: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '立即申请代理资格 →';
+    }
+}
+</script>
+</body>
+</html>

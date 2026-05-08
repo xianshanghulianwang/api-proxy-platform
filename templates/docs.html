@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API文档 - API智 Hub</title>
+<style>
+:root{--primary:#6366F1;--bg:#F8FAFC;--surface:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);}
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:1.2rem;font-weight:800;color:var(--primary);text-decoration:none;}
+.container{max-width:900px;margin:40px auto;padding:0 24px;}
+h1{font-size:1.8rem;font-weight:800;margin-bottom:8px;}
+h2{font-size:1.3rem;font-weight:700;margin:32px 0 16px;border-bottom:2px solid var(--border);padding-bottom:8px;}
+h3{font-size:1.05rem;font-weight:700;margin:16px 0 8px;color:var(--primary);}
+pre{background:#1E1B4B;border-radius:12px;padding:20px;font-family:'Courier New',monospace;font-size:0.85rem;color:#E0E7FF;overflow:auto;line-height:1.7;margin:12px 0;}
+code{background:#F1F5F9;padding:2px 6px;border-radius:4px;font-size:0.88rem;color:#6366F1;font-family:'Courier New',monospace;}
+.desc{margin:16px 0;font-size:0.95rem;line-height:1.7;color:var(--text-light);}
+table{width:100%;border-collapse:collapse;margin:12px 0;}
+th,td{padding:10px 14px;border:1px solid var(--border);text-align:left;font-size:0.88rem;}
+th{background:#F8FAFC;font-weight:600;color:var(--text-light);}
+.alert{background:#F0F9FF;border:1px solid #BAE6FD;border-radius:10px;padding:14px 16px;font-size:0.9rem;color:#0369A1;margin:16px 0;}
+.back{display:inline-block;margin-top:24px;color:var(--primary);text-decoration:none;font-weight:600;}
+</style>
+</head>
+<body>
+<nav><a href="/" class="logo">⚡ API智 Hub</a></nav>
+<div class="container">
+  <a href="/" class="back">← 返回首页</a>
+  <h1 style="margin-top:24px;">API 文档</h1>
+  <p class="desc">API智 Hub 提供 OpenAI 兼容接口，一行代码切换，零侵入接入。</p>
+
+  <h2>接入地址</h2>
+  <pre>https://your-domain/v1/chat/completions</pre>
+
+  <h2>认证方式</h2>
+  <p class="desc">在请求头中使用 <code>Authorization</code> 字段，值为 <code>Bearer 你的API密钥</code></p>
+  <pre>Authorization: Bearer AK-xxxxxxxx-xxxxxxxx</pre>
+
+  <h2>请求示例（cURL）</h2>
+  <pre>curl https://your-domain/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer 你的API密钥" \
+  -d '{
+    "model": "MiniMax-Text-01",
+    "messages": [
+      {"role": "system", "content": "你是一个有帮助的助手"},
+      {"role": "user", "content": "你好，请介绍一下你自己"}
+    ],
+    "temperature": 0.7,
+    "max_tokens": 1000
+  }'</pre>
+
+  <h2>Python SDK 示例</h2>
+  <pre>import openai
+
+openai.api_base = "https://your-domain/v1"
+openai.api_key = "AK-xxxxxxxx-xxxxxxxx"
+
+response = openai.ChatCompletion.create(
+    model = "MiniMax-Text-01",
+    messages = [{"role": "user", "content": "你好"}],
+    temperature = 0.7,
+    max_tokens = 1000
+)
+
+print(response.choices[0].message.content)</pre>
+
+  <h2>请求参数</h2>
+  <table>
+    <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+    <tr><td>model</td><td>string</td><td>是</td><td>模型名称，如 MiniMax-Text-01</td></tr>
+    <tr><td>messages</td><td>array</td><td>是</td><td>对话消息列表</td></tr>
+    <tr><td>temperature</td><td>float</td><td>否</td><td>采样温度，0-2，默认0.7</td></tr>
+    <tr><td>max_tokens</td><td>integer</td><td>否</td><td>最大输出Token数</td></tr>
+    <tr><td>stream</td><td>boolean</td><td>否</td><td>是否流式输出，默认false</td></tr>
+  </table>
+
+  <h2>支持模型</h2>
+  <table>
+    <tr><th>模型标识</th><th>供应商</th><th>说明</th></tr>
+    <tr><td>MiniMax-Text-01</td><td>MiniMax</td><td>MiniMax文本模型，响应快速</td></tr>
+    <tr><td>deepseek-chat</td><td>DeepSeek</td><td>DeepSeek对话模型，高性价比</td></tr>
+    <tr><td>doubao-pro</td><td>火山引擎</td><td>豆包Pro模型，稳定性好</td></tr>
+  </table>
+
+  <h2>响应格式</h2>
+  <pre>{
+  "id": "chatcmpl-xxxx",
+  "object": "chat.completion",
+  "created": 1700000000,
+  "model": "MiniMax-Text-01",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "你好！有什么可以帮助你的吗？"
+    },
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 50,
+    "total_tokens": 70
+  }
+}</pre>
+
+  <div class="alert">💡 <strong>计费说明：</strong>按实际消耗的输入+输出Token数计费，从账户余额中扣除。</div>
+</div>
+</body>
+</html>

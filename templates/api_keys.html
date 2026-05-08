@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的API密钥 - API智 Hub</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC",sans-serif;background:#F1F5F9;min-height:100vh;}
+nav{background:white;border-bottom:1px solid #E2E8F0;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:1.2rem;font-weight:800;color:#6366F1;text-decoration:none;}
+.back{color:#6366F1;text-decoration:none;font-size:0.9rem;font-weight:600;}
+.container{max-width:700px;margin:40px auto;padding:0 24px;}
+.card{background:white;border-radius:16px;padding:32px;border:1px solid #E2E8F0;margin-bottom:20px;}
+.card h2{font-size:1.1rem;font-weight:700;margin-bottom:16px;}
+.keybox{background:#1E1B4B;border-radius:12px;padding:20px;display:flex;align-items:center;justify-content:space-between;}
+.key-val{color:#E0E7FF;font-family:'Courier New',monospace;font-size:0.9rem;letter-spacing:1px;}
+.copy-btn{background:#3730A3;color:#E0E7FF;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-weight:600;font-family:inherit;}
+.alert{background:#FEF9C3;border:1px solid #FDE68A;color:#854D0E;border-radius:10px;padding:12px 16px;font-size:0.88rem;margin-top:16px;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">⚡ API智 Hub</a>
+  <a href="/dashboard" class="back">← 返回控制台</a>
+</nav>
+<div class="container">
+  <div class="card">
+    <h2>🔑 你的 API 密钥</h2>
+    <div class="keybox">
+      <span class="key-val" id="apiKey">加载中...</span>
+      <button class="copy-btn" onclick="copy()">复制</button>
+    </div>
+    <div class="alert">⚠️ 请妥善保管密钥，不要泄露给他人。如密钥泄露请联系客服更换。</div>
+  </div>
+</div>
+<script>
+fetch('/api/user/info').then(r=>r.json()).then(j=>{
+  if(j.code===0) {
+    document.getElementById('apiKey').textContent = j.data.api_key||'无';
+  }
+});
+function copy() {
+  const k = document.getElementById('apiKey').textContent;
+  if(k==='无') return;
+  navigator.clipboard.writeText(k).then(()=>{document.querySelector('.copy-btn').textContent='已复制!';setTimeout(()=>document.querySelector('.copy-btn').textContent='复制',1500);});
+}
+</script>
+</body>
+</html>
