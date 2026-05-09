@@ -3,88 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>注册 - API智 Hub</title>
+<title>注册 - 终点</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: linear-gradient(135deg, #EEF2FF, #F8FAFC); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .reg-box { background: white; border-radius: 24px; padding: 44px; width: 420px; box-shadow: 0 20px 60px rgba(99,102,241,0.15); }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .reg-box { background: white; border-radius: 24px; padding: 44px; width: 420px; box-shadow: 0 25px 80px rgba(0,0,0,0.4); }
   .logo { text-align: center; margin-bottom: 32px; }
-  .logo h1 { font-size: 1.5rem; color: #4F46E5; font-weight: 800; text-decoration: none; }
+  .logo h1 { font-size: 2rem; color: #667eea; font-weight: 800; text-decoration: none; letter-spacing: 4px; }
+  .logo p { font-size: 0.85rem; color: #999; margin-top: 4px; }
   .form-group { margin-bottom: 18px; }
   .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #374151; }
-  .form-group input { width: 100%; padding: 12px 16px; border: 2px solid #E2E8F0; border-radius: 12px; font-size: 0.95rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
-  .form-group input:focus { border-color: #6366F1; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .submit-btn { width: 100%; padding: 13px; background: #6366F1; color: white; border: none; border-radius: 28px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.2s; margin-top: 8px; }
-  .submit-btn:hover { background: #4F46E5; }
-  .submit-btn:disabled { background: #A5B4FC; cursor: not-allowed; }
-  .msg { text-align: center; margin-top: 14px; font-size: 0.88rem; }
-  .msg.error { color: #EF4444; }
-  .msg.success { color: #10B981; }
-  .links { text-align: center; margin-top: 20px; font-size: 0.88rem; color: #64748B; }
-  .links a { color: #6366F1; text-decoration: none; font-weight: 600; }
-  .tip { background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 10px; padding: 12px 16px; font-size: 0.82rem; color: #0369A1; margin-bottom: 20px; }
+  .form-group label span { color: #ef4444; }
+  .form-group input { width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95rem; font-family: inherit; outline: none; transition: all 0.3s; }
+  .form-group input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+  .form-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+  .send-code-btn { padding: 13px 16px; background: #667eea; color: white; border: none; border-radius: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; height: 48px; }
+  .send-code-btn:hover { background: #5a6fd6; }
+  .send-code-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 28px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.3s; margin-top: 8px; }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .msg { text-align: center; margin-top: 14px; font-size: 0.88rem; padding: 10px; border-radius: 8px; }
+  .msg.error { color: #ef4444; background: #fef2f2; }
+  .msg.success { color: #10b981; background: #ecfdf5; }
+  .links { text-align: center; margin-top: 20px; font-size: 0.88rem; color: #64748b; }
+  .links a { color: #667eea; text-decoration: none; font-weight: 600; }
+  .tip { background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%); border: 1px solid rgba(102,126,234,0.2); border-radius: 12px; padding: 14px 16px; font-size: 0.82rem; color: #667eea; margin-bottom: 20px; line-height: 1.6; }
+  .step-indicator { display: flex; justify-content: center; margin-bottom: 24px; }
+  .step { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; margin: 0 4px; transition: all 0.3s; }
+  .step.active { background: #667eea; width: 30px; border-radius: 5px; }
 </style>
 </head>
 <body>
 <div class="reg-box">
   <div class="logo">
-    <h1>⚡ API智 Hub</h1>
+    <h1>终点</h1>
+    <p>API中转站 SaaS平台</p>
   </div>
+  
+  <div class="step-indicator">
+    <div class="step active" id="step1"></div>
+    <div class="step" id="step2"></div>
+  </div>
+  
   <div class="tip">🎁 注册即送体验额度，5分钟快速接入</div>
+  
   <form id="regForm">
     <div class="form-group">
-      <label>用户名 *</label>
-      <input type="text" name="username" placeholder="字母、数字、下划线，最少4位" required minlength="4">
+      <label>用户名 <span>*</span></label>
+      <input type="text" name="username" placeholder="字母、数字、下划线，最少4位" required minlength="4" maxlength="20">
     </div>
+    
     <div class="form-group">
-      <label>密码 *</label>
+      <label>手机号 <span>*</span></label>
+      <input type="tel" name="phone" placeholder="请输入手机号" required pattern="1[3-9]\d{9}" maxlength="11">
+    </div>
+    
+    <div class="form-group">
+      <label>邮箱 <span>*</span></label>
+      <input type="email" name="email" placeholder="请输入邮箱地址" required>
+    </div>
+    
+    <div class="form-group">
+      <label>邮箱验证码 <span>*</span></label>
+      <div class="form-row">
+        <input type="text" name="email_code" placeholder="请输入6位验证码" required maxlength="6" pattern="\d{6}">
+        <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="sendCode()">发送验证码</button>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label>密码 <span>*</span></label>
       <input type="password" name="password" placeholder="至少6位" required minlength="6">
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>邮箱（选填）</label>
-        <input type="email" name="email" placeholder="example@mail.com">
-      </div>
-      <div class="form-group">
-        <label>手机（选填）</label>
-        <input type="tel" name="phone" placeholder="13800138000">
-      </div>
-    </div>
+    
+    <input type="hidden" name="referral_code" id="referralCode" value="">
+    
     <button type="submit" class="submit-btn" id="submitBtn">注册并登录</button>
-    <div id="msg" class="msg"></div>
+    <div id="msg" class="msg" style="display:none;"></div>
   </form>
+  
   <div class="links">
     已有账号？<a href="/login">立即登录</a>
   </div>
 </div>
+
 <script>
+// 获取URL中的推荐码
+const urlParams = new URLSearchParams(window.location.search);
+const referralCode = urlParams.get('code') || urlParams.get('ref');
+if (referralCode) {
+  document.getElementById('referralCode').value = referralCode;
+}
+
+// 发送验证码
+let countdown = 0;
+function sendCode() {
+  const email = document.querySelector('input[name="email"]').value;
+  const phone = document.querySelector('input[name="phone"]').value;
+  
+  if (!email || !phone) {
+    showMsg('请先填写邮箱和手机号', 'error');
+    return;
+  }
+  
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    showMsg('请输入正确的手机号', 'error');
+    return;
+  }
+  
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showMsg('请输入正确的邮箱地址', 'error');
+    return;
+  }
+  
+  const btn = document.getElementById('sendCodeBtn');
+  btn.disabled = true;
+  btn.textContent = '发送中...';
+  
+  fetch('/api/auth/send_code', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email, phone})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.code === 0) {
+      showMsg('验证码已发送到邮箱', 'success');
+      countdown = 60;
+      timer();
+    } else {
+      showMsg(data.msg || '发送失败', 'error');
+      btn.disabled = false;
+      btn.textContent = '发送验证码';
+    }
+  })
+  .catch(() => {
+    showMsg('网络异常', 'error');
+    btn.disabled = false;
+    btn.textContent = '发送验证码';
+  });
+}
+
+function timer() {
+  const btn = document.getElementById('sendCodeBtn');
+  if (countdown > 0) {
+    btn.textContent = countdown + '秒后重试';
+    countdown--;
+    setTimeout(timer, 1000);
+  } else {
+    btn.disabled = false;
+    btn.textContent = '发送验证码';
+  }
+}
+
+function showMsg(text, type) {
+  const msg = document.getElementById('msg');
+  msg.textContent = text;
+  msg.className = 'msg ' + type;
+  msg.style.display = 'block';
+}
+
+// 表单提交
 document.getElementById('regForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
   const msg = document.getElementById('msg');
   const data = new FormData(this);
+  
   btn.disabled = true;
   btn.textContent = '注册中...';
-  msg.textContent = '';
-  msg.className = 'msg';
-
+  msg.style.display = 'none';
+  
+  const body = {
+    username: data.get('username'),
+    phone: data.get('phone'),
+    email: data.get('email'),
+    email_code: data.get('email_code'),
+    password: data.get('password'),
+    referral_code: data.get('referral_code')
+  };
+  
   try {
-    const res = await fetch('/api/auth/register', { method: 'POST', body: data });
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
     const json = await res.json();
+    
     if (json.code === 0) {
-      msg.textContent = '注册成功，正在跳转...';
-      msg.className = 'msg success';
+      showMsg('注册成功，正在跳转...', 'success');
       setTimeout(() => window.location.href = '/dashboard', 800);
     } else {
-      msg.textContent = json.msg || '注册失败';
-      msg.className = 'msg error';
+      showMsg(json.msg || '注册失败', 'error');
       btn.disabled = false;
       btn.textContent = '注册并登录';
     }
   } catch(err) {
-    msg.textContent = '网络异常，请重试';
-    msg.className = 'msg error';
+    showMsg('网络异常，请重试', 'error');
     btn.disabled = false;
     btn.textContent = '注册并登录';
   }

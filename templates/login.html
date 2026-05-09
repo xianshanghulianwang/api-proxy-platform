@@ -3,36 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>登录 - API智 Hub</title>
+<title>登录 - 终点</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: linear-gradient(135deg, #EEF2FF, #F8FAFC); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-  .login-box { background: white; border-radius: 24px; padding: 48px; width: 420px; box-shadow: 0 20px 60px rgba(99,102,241,0.15); }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-box { background: white; border-radius: 24px; padding: 44px; width: 400px; box-shadow: 0 25px 80px rgba(0,0,0,0.4); }
   .logo { text-align: center; margin-bottom: 32px; }
-  .logo h1 { font-size: 1.5rem; color: #4F46E5; font-weight: 800; text-decoration: none; }
-  .form-group { margin-bottom: 20px; }
+  .logo h1 { font-size: 2rem; color: #667eea; font-weight: 800; letter-spacing: 4px; text-decoration: none; }
+  .logo p { font-size: 0.85rem; color: #999; margin-top: 4px; }
+  .form-group { margin-bottom: 18px; }
   .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #374151; }
-  .form-group input { width: 100%; padding: 12px 16px; border: 2px solid #E2E8F0; border-radius: 12px; font-size: 0.95rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
-  .form-group input:focus { border-color: #6366F1; }
-  .submit-btn { width: 100%; padding: 13px; background: #6366F1; color: white; border: none; border-radius: 28px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.2s; }
-  .submit-btn:hover { background: #4F46E5; }
-  .submit-btn:disabled { background: #A5B4FC; cursor: not-allowed; }
-  .msg { text-align: center; margin-top: 16px; font-size: 0.88rem; }
-  .msg.error { color: #EF4444; }
-  .msg.success { color: #10B981; }
-  .links { text-align: center; margin-top: 20px; font-size: 0.88rem; color: #64748B; }
-  .links a { color: #6366F1; text-decoration: none; font-weight: 600; }
+  .form-group input { width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95rem; font-family: inherit; outline: none; transition: all 0.3s; }
+  .form-group input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+  .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 28px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.3s; margin-top: 8px; }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .msg { text-align: center; margin-top: 14px; font-size: 0.88rem; padding: 10px; border-radius: 8px; display: none; }
+  .msg.error { color: #ef4444; background: #fef2f2; }
+  .msg.success { color: #10b981; background: #ecfdf5; }
+  .links { text-align: center; margin-top: 20px; font-size: 0.88rem; color: #64748b; }
+  .links a { color: #667eea; text-decoration: none; font-weight: 600; }
 </style>
 </head>
 <body>
 <div class="login-box">
   <div class="logo">
-    <h1>⚡ API智 Hub</h1>
+    <a href="/" style="text-decoration:none;"><h1>终点</h1></a>
+    <p>API中转站 SaaS平台</p>
   </div>
   <form id="loginForm">
     <div class="form-group">
-      <label>用户名</label>
-      <input type="text" name="username" placeholder="请输入用户名" required autofocus>
+      <label>用户名 / 手机号 / 邮箱</label>
+      <input type="text" name="username" placeholder="请输入" required autofocus>
     </div>
     <div class="form-group">
       <label>密码</label>
@@ -45,33 +47,38 @@
     还没有账号？<a href="/register">立即注册</a>
   </div>
 </div>
+
 <script>
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
   const msg = document.getElementById('msg');
   const data = new FormData(this);
+  
   btn.disabled = true;
   btn.textContent = '登录中...';
-  msg.textContent = '';
-  msg.className = 'msg';
-
+  msg.style.display = 'none';
+  
   try {
     const res = await fetch('/api/auth/login', { method: 'POST', body: data });
     const json = await res.json();
+    
     if (json.code === 0) {
       msg.textContent = '登录成功，正在跳转...';
       msg.className = 'msg success';
+      msg.style.display = 'block';
       setTimeout(() => window.location.href = '/dashboard', 800);
     } else {
       msg.textContent = json.msg || '登录失败';
       msg.className = 'msg error';
+      msg.style.display = 'block';
       btn.disabled = false;
       btn.textContent = '登录';
     }
   } catch(err) {
     msg.textContent = '网络异常，请重试';
     msg.className = 'msg error';
+    msg.style.display = 'block';
     btn.disabled = false;
     btn.textContent = '登录';
   }

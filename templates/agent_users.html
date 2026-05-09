@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>下线管理 - 终点</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f7; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; }
+  .header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .header p { font-size: 0.9rem; opacity: 0.9; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .nav a { padding: 10px 20px; background: white; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.9rem; transition: all 0.2s; }
+  .nav a:hover { background: #667eea; color: white; }
+  .nav a.active { background: #667eea; color: white; }
+  .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .section-title { font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .stat-row { display: flex; gap: 20px; margin-bottom: 24px; }
+  .stat-box { flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; }
+  .stat-value { font-size: 2rem; font-weight: 700; }
+  .stat-label { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+  .user-table { width: 100%; border-collapse: collapse; }
+  .user-table th { text-align: left; padding: 12px; background: #f9f9f9; font-size: 0.85rem; color: #666; font-weight: 600; }
+  .user-table td { padding: 14px 12px; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; }
+  .user-table tr:hover { background: #f9f9f9; }
+  .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+  .user-info { display: flex; align-items: center; gap: 12px; }
+  .user-name { font-weight: 600; color: #333; }
+  .user-phone { font-size: 0.8rem; color: #999; }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .badge-active { background: #d1fae5; color: #059669; }
+  .empty { text-align: center; padding: 60px; color: #999; font-size: 1rem; }
+  @media (max-width: 768px) {
+    .user-table { font-size: 0.85rem; }
+    .user-table th:nth-child(3), .user-table td:nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>下线管理</h1>
+  <p>查看和管理您的下线用户</p>
+</div>
+
+<div class="container">
+  <div class="nav">
+    <a href="/agent/dashboard">总览</a>
+    <a href="/agent/users" class="active">下线管理</a>
+    <a href="/agent/commissions">佣金记录</a>
+    <a href="/agent/withdraw">提现</a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">👥 我的下线</div>
+    <div id="userList">
+      <div class="empty">加载中...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadUsers() {
+  try {
+    const res = await fetch('/api/agent/downlines');
+    const json = await res.json();
+    
+    if (json.code !== 0) {
+      document.getElementById('userList').innerHTML = '<div class="empty">加载失败</div>';
+      return;
+    }
+    
+    const users = json.data || [];
+    
+    if (users.length === 0) {
+      document.getElementById('userList').innerHTML = `
+        <div class="empty">
+          <p style="font-size:3rem;margin-bottom:16px;">👥</p>
+          <p>暂无下线用户</p>
+          <p style="font-size:0.9rem;margin-top:8px;">分享您的推广链接发展下线</p>
+        </div>
+      `;
+      return;
+    }
+    
+    const html = `
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>用户</th>
+            <th>手机号</th>
+            <th>注册时间</th>
+            <th>累计佣金贡献</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${users.map(u => `
+            <tr>
+              <td>
+                <div class="user-info">
+                  <div class="user-avatar">${(u.username || 'U').charAt(0).toUpperCase()}</div>
+                  <div>
+                    <div class="user-name">${u.username}</div>
+                    <div class="user-phone">ID: ${u.id.substring(0, 8)}...</div>
+                  </div>
+                </div>
+              </td>
+              <td>${u.phone || '-'}</td>
+              <td>${new Date(u.created_at).toLocaleDateString()}</td>
+              <td style="color:#10b981;font-weight:600;">¥${(u.total_commission || 0).toFixed(2)}</td>
+              <td><span class="badge badge-active">活跃</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    
+    document.getElementById('userList').innerHTML = html;
+    
+  } catch(e) {
+    console.error(e);
+    document.getElementById('userList').innerHTML = '<div class="empty">加载失败</div>';
+  }
+}
+
+loadUsers();
+</script>
+</body>
+</html>

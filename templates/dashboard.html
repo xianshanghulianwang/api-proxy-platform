@@ -3,431 +3,138 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>控制台 - API智 Hub</title>
+<title>控制台 - 终点</title>
 <style>
-  :root { --primary: #6366F1; --primary-dark: #4F46E5; --success: #10B981; --warning: #F59E0B; --danger: #EF4444; --bg: #F1F5F9; --surface: #fff; --text: #1E293B; --text-light: #64748B; --border: #E2E8F0; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
-  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
-  .logo { font-size: 1.2rem; font-weight: 800; color: var(--primary); text-decoration: none; }
-  .nav-right { display: flex; align-items: center; gap: 16px; }
-  .nav-balance { background: #EEF2FF; color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
-  .nav-balance small { font-weight: 400; opacity: 0.7; }
-  .nav-user { font-size: 0.9rem; color: var(--text-light); }
-  .nav-user strong { color: var(--text); }
-  .logout-btn { background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-family: inherit; transition: all 0.2s; }
-  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
-
-  .layout { display: flex; min-height: calc(100vh - 64px); }
-  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; flex-shrink: 0; }
-  .sidebar-item { display: block; padding: 11px 24px; color: var(--text-light); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
-  .sidebar-item:hover, .sidebar-item.active { background: #EEF2FF; color: var(--primary); border-left-color: var(--primary); }
-  .main { flex: 1; padding: 32px; overflow: auto; }
-
-  .page { display: none; }
-  .page.active { display: block; }
-
-  .card { background: var(--surface); border-radius: 16px; padding: 28px; border: 1px solid var(--border); margin-bottom: 24px; }
-  .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-  .page-header h2 { font-size: 1.4rem; font-weight: 800; }
-
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-  .stat-card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
-  .stat-label { font-size: 0.82rem; color: var(--text-light); margin-bottom: 6px; }
-  .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
-  .stat-value.green { color: var(--success); }
-  .stat-value.orange { color: var(--warning); }
-
-  .apikey-box { background: #1E1B4B; border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: space-between; }
-  .apikey-label { color: #A5B4FC; font-size: 0.82rem; margin-bottom: 6px; }
-  .apikey-value { color: #E0E7FF; font-family: 'Courier New', monospace; font-size: 0.9rem; letter-spacing: 1px; }
-  .copy-btn { background: #3730A3; color: #E0E7FF; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-family: inherit; font-weight: 600; transition: background 0.2s; }
-  .copy-btn:hover { background: #4338CA; }
-
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 0.82rem; color: var(--text-light); font-weight: 600; padding: 10px 12px; border-bottom: 2px solid var(--border); }
-  td { padding: 12px; font-size: 0.88rem; border-bottom: 1px solid var(--border); }
-  tr:hover td { background: #F8FAFC; }
-  .status-badge { padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
-  .status-paid { background: #DCFCE7; color: #166534; }
-  .status-pending { background: #FEF3C7; color: #92400E; }
-
-  .pkg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .pkg-card { border: 2px solid var(--border); border-radius: 16px; padding: 28px 20px; text-align: center; transition: all 0.3s; cursor: pointer; }
-  .pkg-card:hover, .pkg-card.selected { border-color: var(--primary); background: #EEF2FF; }
-  .pkg-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; }
-  .pkg-desc { font-size: 0.82rem; color: var(--text-light); margin-bottom: 12px; }
-  .pkg-price { font-size: 2rem; font-weight: 800; color: var(--primary); }
-  .pkg-price small { font-size: 0.9rem; font-weight: 500; color: var(--text-light); }
-  .pkg-credits { font-size: 0.82rem; color: var(--text-light); margin: 8px 0 16px; }
-  .pkg-select { width: 100%; padding: 10px; border-radius: 24px; border: 2px solid var(--primary); background: transparent; color: var(--primary); font-weight: 700; font-size: 0.9rem; cursor: pointer; font-family: inherit; transition: all 0.2s; }
-  .pkg-select:hover, .pkg-card.selected .pkg-select { background: var(--primary); color: white; }
-
-  .recharge-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-  .recharge-amount { flex: 1; min-width: 120px; }
-  .recharge-amount input { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 1.1rem; font-family: inherit; font-weight: 700; outline: none; transition: border-color 0.2s; }
-  .recharge-amount input:focus { border-color: var(--primary); }
-  .recharge-btn { background: var(--primary); color: white; border: none; padding: 12px 32px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; }
-  .recharge-btn:hover { background: var(--primary-dark); }
-
-  .quick-pkg { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
-  .quick-btn { padding: 7px 16px; border: 2px solid var(--border); border-radius: 24px; background: transparent; cursor: pointer; font-size: 0.85rem; font-weight: 600; font-family: inherit; transition: all 0.2s; }
-  .quick-btn:hover, .quick-btn.selected { border-color: var(--primary); background: #EEF2FF; color: var(--primary); }
-
-  .alert { padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem; }
-  .alert-red { background: #FEE2E2; border: 1px solid #FECACA; color: #991B1B; }
-  .alert-green { background: #DCFCE7; border: 1px solid #BBF7D0; color: #166534; }
-  .alert-yellow { background: #FEF9C3; border: 1px solid #FDE68A; color: #854D0E; }
-
-  .pagination { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
-  .page-btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; background: white; cursor: pointer; font-size: 0.85rem; font-family: inherit; }
-  .page-btn:hover { border-color: var(--primary); color: var(--primary); }
-
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f7; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; }
+  .header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .header p { font-size: 0.9rem; opacity: 0.9; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat { background: white; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .stat-value { font-size: 1.8rem; font-weight: 700; color: #667eea; }
+  .stat-label { font-size: 0.85rem; color: #999; margin-top: 4px; }
+  .section { background: white; border-radius: 16px; padding: 24px; margin-top: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .section-title { font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .api-key-box { background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .api-key-box input { flex: 1; border: none; background: none; font-family: monospace; font-size: 0.9rem; color: #333; outline: none; }
+  .copy-btn { background: #667eea; color: white; padding: 8px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  .copy-btn:hover { background: #5a6fd6; }
+  .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+  .action-btn { display: flex; align-items: center; gap: 12px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; text-decoration: none; color: #333; font-weight: 500; transition: all 0.2s; }
+  .action-btn:hover { border-color: #667eea; color: #667eea; }
+  .action-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .upgrade-banner { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 16px; padding: 24px; color: white; display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+  .upgrade-banner h3 { font-size: 1.1rem; margin-bottom: 4px; }
+  .upgrade-banner p { font-size: 0.9rem; opacity: 0.9; }
+  .upgrade-btn { background: white; color: #667eea; padding: 12px 24px; border: none; border-radius: 24px; font-weight: 700; cursor: pointer; text-decoration: none; }
+  .upgrade-btn:hover { background: #f0f9ff; }
   @media (max-width: 768px) {
-    .sidebar { display: none; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-    .pkg-grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .quick-actions { grid-template-columns: 1fr; }
+    .upgrade-banner { flex-direction: column; gap: 16px; text-align: center; }
   }
 </style>
 </head>
 <body>
-<nav>
-  <a href="/" class="logo">⚡ API智 Hub</a>
-  <div class="nav-right">
-    <div class="nav-balance">余额：¥<span id="navBalance">--</span> <small>| 额度：<span id="navQuota">--</span></small></div>
-    <div class="nav-user"><strong id="navUsername">--</strong></div>
-    <button class="logout-btn" onclick="logout()">退出</button>
+<div class="header">
+  <h1>控制台</h1>
+  <p id="welcome">欢迎回来</p>
+</div>
+
+<div class="container">
+  <div class="stats" id="stats">
+    <div class="stat">
+      <div class="stat-value" id="balance">¥0</div>
+      <div class="stat-label">账户余额</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="quota">0</div>
+      <div class="stat-label">API额度</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="apiCalls">0</div>
+      <div class="stat-label">累计调用</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="userType">游客</div>
+      <div class="stat-label">用户类型</div>
+    </div>
   </div>
-</nav>
 
-<div class="layout">
-  <div class="sidebar">
-    <a href="#" class="sidebar-item active" onclick="showPage('overview')">📊 概览</a>
-    <a href="#" class="sidebar-item" onclick="showPage('apikeys')">🔑 我的密钥</a>
-    <a href="#" class="sidebar-item" onclick="showPage('packages')">📦 购买套餐</a>
-    <a href="#" class="sidebar-item" onclick="showPage('recharge')">💰 余额充值</a>
-    <a href="#" class="sidebar-item" onclick="showPage('usage')">📈 用量记录</a>
-    <a href="#" class="sidebar-item" onclick="showPage('orders')">🧾 订单记录</a>
-    <a href="#" class="sidebar-item" onclick="showPage('docs')">📖 API文档</a>
+  <div class="section">
+    <div class="section-title">🔑 您的 API Key</div>
+    <div class="api-key-box">
+      <input type="text" id="apiKey" readonly placeholder="登录后查看">
+      <button class="copy-btn" onclick="copyKey()">复制</button>
+    </div>
   </div>
 
-  <div class="main">
-    <!-- 概览页 -->
-    <div class="page active" id="page-overview">
-      <div class="page-header">
-        <h2>控制台概览</h2>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">账户余额</div>
-          <div class="stat-value green" id="statBalance">¥0.00</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">API 额度点</div>
-          <div class="stat-value" id="statQuota">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">累计消费</div>
-          <div class="stat-value orange" id="statCost">¥0.00</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">API 调用次数</div>
-          <div class="stat-value" id="statCalls">0</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">🔑 你的 API 密钥</div>
-        <div class="apikey-box">
-          <div>
-            <div class="apikey-label">API KEY</div>
-            <div class="apikey-value" id="myApiKey">加载中...</div>
-          </div>
-          <button class="copy-btn" onclick="copyKey()">复制密钥</button>
-        </div>
-        <div class="alert alert-yellow" style="margin-top:16px;">
-          ⚠️ 请妥善保管你的 API 密钥，不要泄露给他人。
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📖 快速接入</div>
-        <pre style="background:#F8FAFC;border-radius:10px;padding:16px;font-size:0.85rem;line-height:1.6;overflow:auto;color:#374151">import openai
-
-openai.api_base = "<span style="color:#6366F1">https://your-domain/v1</span>"
-openai.api_key = "<span style="color:#6366F1" id="quickKey">你的密钥</span>"
-
-response = openai.ChatCompletion.create(
-    model = "MiniMax-Text-01",
-    messages = [{"role": "user", "content": "你好"}]
-)
-print(response.choices[0].message.content)</pre>
-      </div>
+  <div class="upgrade-banner" id="upgradeBanner" style="display:none;">
+    <div>
+      <h3>🚀 开通代理 开启创业之路</h3>
+      <p>成为代理拥有独立中转站，发展下线获得佣金</p>
     </div>
+    <a href="/agent/register" class="upgrade-btn">立即开通</a>
+  </div>
 
-    <!-- 我的密钥页 -->
-    <div class="page" id="page-apikeys">
-      <div class="page-header">
-        <h2>API 密钥</h2>
-      </div>
-      <div class="card">
-        <div class="card-title">当前密钥</div>
-        <div class="apikey-box">
-          <div>
-            <div class="apikey-label">API KEY</div>
-            <div class="apikey-value" id="detailApiKey">--</div>
-          </div>
-          <button class="copy-btn" onclick="copyKey()">复制</button>
-        </div>
-        <div class="alert alert-green" style="margin-top:16px;">
-          ✅ 每个账户有唯一密钥，修改API密钥请联系客服。
-        </div>
-      </div>
-    </div>
-
-    <!-- 套餐页 -->
-    <div class="page" id="page-packages">
-      <div class="page-header">
-        <h2>购买套餐</h2>
-      </div>
-      <div id="pkgAlert" class="alert" style="display:none;"></div>
-      <div class="pkg-grid" id="pkgGrid"></div>
-      <div style="margin-top:24px;text-align:center;">
-        <button class="recharge-btn" onclick="buyPackage()" id="buyBtn">立即购买所选套餐</button>
-      </div>
-    </div>
-
-    <!-- 充值页 -->
-    <div class="page" id="page-recharge">
-      <div class="page-header"><h2>余额充值</h2></div>
-      <div class="card">
-        <div class="card-title">自定义充值金额</div>
-        <div class="recharge-row">
-          <div class="recharge-amount">
-            <input type="number" id="rechargeAmount" placeholder="输入充值金额" min="1" step="0.01">
-          </div>
-          <button class="recharge-btn" onclick="recharge()">支付宝充值</button>
-        </div>
-        <div style="font-size:0.82rem;color:var(--text-light);margin-top:8px;">
-          💳 充值金额将直接进入账户余额，永不过期。按量计费，灵活使用。
-        </div>
-      </div>
-    </div>
-
-    <!-- 用量记录页 -->
-    <div class="page" id="page-usage">
-      <div class="page-header"><h2>用量记录</h2></div>
-      <div class="stats-grid" style="margin-bottom:24px;">
-        <div class="stat-card"><div class="stat-label">输入Tokens</div><div class="stat-value" id="uInput">0</div></div>
-        <div class="stat-card"><div class="stat-label">输出Tokens</div><div class="stat-value" id="uOutput">0</div></div>
-        <div class="stat-card"><div class="stat-label">总消费</div><div class="stat-value" id="uCost">¥0.00</div></div>
-        <div class="stat-card"><div class="stat-label">调用次数</div><div class="stat-value" id="uCalls">0</div></div>
-      </div>
-      <div class="card">
-        <table id="usageTable">
-          <thead><tr><th>时间</th><th>模型</th><th>输入Tokens</th><th>输出Tokens</th><th>费用</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="pagination" id="usagePager"></div>
-      </div>
-    </div>
-
-    <!-- 订单记录页 -->
-    <div class="page" id="page-orders">
-      <div class="page-header"><h2>订单记录</h2></div>
-      <div class="card">
-        <table id="ordersTable">
-          <thead><tr><th>订单号</th><th>套餐</th><th>金额</th><th>状态</th><th>创建时间</th><th>支付时间</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="pagination" id="ordersPager"></div>
-      </div>
-    </div>
-
-    <!-- API文档页 -->
-    <div class="page" id="page-docs">
-      <div class="page-header"><h2>API 文档</h2></div>
-      <div class="card">
-        <div class="card-title">接入地址</div>
-        <div style="background:#F8FAFC;border-radius:10px;padding:16px;font-family:'Courier New',monospace;font-size:0.88rem;color:#6366F1;">
-          https://your-domain/v1/chat/completions
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">请求示例（cURL）</div>
-        <pre style="background:#1E1B4B;border-radius:10px;padding:16px;font-size:0.82rem;line-height:1.7;overflow:auto;color:#E0E7FF">curl https://your-domain/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <span style="color:#A78BFA">你的API密钥</span>" \
-  -d '{
-    "model": "MiniMax-Text-01",
-    "messages": [
-      {"role": "user", "content": "你好"}
-    ]
-  }'</pre>
-      </div>
-      <div class="card">
-        <div class="card-title">支持的模型</div>
-        <table>
-          <thead><tr><th>模型标识</th><th>说明</th><th>计费方式</th></tr></thead>
-          <tbody>
-            <tr><td>MiniMax-Text-01</td><td>MiniMax文本模型</td><td>按Token</td></tr>
-            <tr><td>deepseek-chat</td><td>DeepSeek对话模型</td><td>按Token</td></tr>
-            <tr><td>doubao-pro</td><td>火山引擎豆包模型</td><td>按Token</td></tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="section">
+    <div class="section-title">⚡ 快捷操作</div>
+    <div class="quick-actions">
+      <a href="/pricing" class="action-btn">
+        <div class="action-icon">💰</div>
+        <span>购买套餐</span>
+      </a>
+      <a href="/docs" class="action-btn">
+        <div class="action-icon">📚</div>
+        <span>API文档</span>
+      </a>
+      <a href="/agent/register" class="action-btn" id="agentLink">
+        <div class="action-icon">👑</div>
+        <span>开通代理</span>
+      </a>
     </div>
   </div>
 </div>
 
 <script>
-let gUser = null;
-let gSelectedPkg = null;
-
-async function getUser() {
-  const r = await fetch('/api/user/info');
-  const j = await r.json();
-  if (j.code !== 0) { window.location.href = '/login'; return; }
-  gUser = j.data;
-  document.getElementById('navUsername').textContent = j.data.username;
-  document.getElementById('navBalance').textContent = j.data.balance.toFixed(2);
-  document.getElementById('navQuota').textContent = j.data.api_quota;
-  document.getElementById('myApiKey').textContent = j.data.api_key || '无';
-  document.getElementById('detailApiKey').textContent = j.data.api_key || '无';
-  document.getElementById('quickKey').textContent = j.data.api_key || '无';
-}
-
-async function loadStats() {
-  const r = await fetch('/api/usage/stats');
-  const j = await r.json();
-  if (j.code !== 0) return;
-  const d = j.data;
-  document.getElementById('statBalance').textContent = '¥' + d.balance.toFixed(2);
-  document.getElementById('statQuota').textContent = d.quota;
-  document.getElementById('statCost').textContent = '¥' + d.total_cost.toFixed(4);
-  document.getElementById('statCalls').textContent = d.total_calls;
-  document.getElementById('uInput').textContent = d.input_tokens.toLocaleString();
-  document.getElementById('uOutput').textContent = d.output_tokens.toLocaleString();
-  document.getElementById('uCost').textContent = '¥' + d.total_cost.toFixed(4);
-  document.getElementById('uCalls').textContent = d.total_calls;
-}
-
-async function loadPackages() {
-  const r = await fetch('/api/packages');
-  const j = await r.json();
-  if (j.code !== 0) return;
-  const grid = document.getElementById('pkgGrid');
-  grid.innerHTML = j.data.map(p => `
-    <div class="pkg-card" onclick="selectPkg('${p.id}', this)">
-      <div class="pkg-name">${p.name}</div>
-      <div class="pkg-desc">${p.description || ''}</div>
-      <div class="pkg-price">¥${p.price}${p.price === 0 ? '' : '<small>元</small>'}</div>
-      <div class="pkg-credits">${p.credits > 0 ? p.credits + ' 额度点' : '联系客服'}</div>
-      <div class="pkg-select">${p.price === 0 ? '联系客服' : '选择套餐'}</div>
-    </div>
-  `).join('');
-}
-
-async function loadUsageLogs(page = 1) {
-  const r = await fetch(`/api/usage/logs?page=${page}`);
-  const j = await r.json();
-  if (j.code !== 0) return;
-  const tb = document.querySelector('#usageTable tbody');
-  tb.innerHTML = j.data.logs.map(l => `
-    <tr>
-      <td>${l.called_at ? l.called_at.substring(0, 19) : '-'}</td>
-      <td>${l.model || '-'}</td>
-      <td>${l.input_tokens.toLocaleString()}</td>
-      <td>${l.output_tokens.toLocaleString()}</td>
-      <td>¥${l.cost.toFixed(4)}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-light)">暂无记录</td></tr>';
-}
-
-async function loadOrders(page = 1) {
-  const r = await fetch(`/api/orders?page=${page}`);
-  const j = await r.json();
-  if (j.code !== 0) return;
-  const tb = document.querySelector('#ordersTable tbody');
-  tb.innerHTML = j.data.orders.map(o => `
-    <tr>
-      <td style="font-family:monospace;font-size:0.8rem">${o.id}</td>
-      <td>${o.package_name || '余额充值'}</td>
-      <td>¥${parseFloat(o.amount).toFixed(2)}</td>
-      <td><span class="status-badge ${o.status === 'paid' ? 'status-paid' : 'status-pending'}">${o.status === 'paid' ? '已支付' : '待支付'}</span></td>
-      <td>${o.created_at ? o.created_at.substring(0, 19) : '-'}</td>
-      <td>${o.paid_at ? o.paid_at.substring(0, 19) : '-'}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-light)">暂无订单</td></tr>';
-}
-
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(a => a.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  event && event.target && event.target.classList && (event.target.classList.add('active'));
-
-  if (name === 'overview') loadStats();
-  if (name === 'packages') loadPackages();
-  if (name === 'usage') loadUsageLogs();
-  if (name === 'orders') loadOrders();
-  if (name === 'docs') {}
-}
-
-function selectPkg(id, el) {
-  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  gSelectedPkg = id;
-}
-
-async function buyPackage() {
-  if (!gSelectedPkg) {
-    document.getElementById('pkgAlert').textContent = '请先选择一个套餐';
-    document.getElementById('pkgAlert').className = 'alert alert-red';
-    document.getElementById('pkgAlert').style.display = 'block';
-    return;
-  }
-  const fd = new FormData();
-  fd.append('package_id', gSelectedPkg);
-  const r = await fetch('/api/order/create', { method: 'POST', body: fd });
-  const j = await r.json();
-  if (j.code !== 0) { alert(j.msg); return; }
-  if (j.data.pay_url) {
-    window.open(j.data.pay_url, '_blank', 'width=600,height=700');
-  }
-}
-
-async function recharge() {
-  const amt = parseFloat(document.getElementById('rechargeAmount').value);
-  if (!amt || amt <= 0) { alert('请输入正确金额'); return; }
-  const fd = new FormData();
-  fd.append('amount', amt);
-  const r = await fetch('/api/recharge', { method: 'POST', body: fd });
-  const j = await r.json();
-  if (j.code !== 0) { alert(j.msg); return; }
-  if (j.data.pay_url) {
-    window.open(j.data.pay_url, '_blank', 'width=600,height=700');
+async function loadUserInfo() {
+  try {
+    const res = await fetch('/api/user/info');
+    const json = await res.json();
+    
+    if (json.code !== 0) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    const data = json.data;
+    document.getElementById('welcome').textContent = `欢迎回来，${data.username}`;
+    document.getElementById('balance').textContent = '¥' + (data.balance || 0).toFixed(2);
+    document.getElementById('quota').textContent = data.api_quota || 0;
+    document.getElementById('apiKey').value = data.api_key || '';
+    document.getElementById('userType').textContent = data.is_agent ? '代理商' : '普通用户';
+    
+    if (data.is_agent) {
+      document.getElementById('upgradeBanner').style.display = 'none';
+      document.getElementById('agentLink').href = '/agent/dashboard';
+      document.getElementById('agentLink').querySelector('span').textContent = '代理中心';
+    }
+  } catch(e) {
+    console.error(e);
   }
 }
 
 function copyKey() {
-  const key = gUser?.api_key || '';
+  const key = document.getElementById('apiKey').value;
   if (!key) return;
   navigator.clipboard.writeText(key).then(() => {
-    const btn = document.querySelector('.copy-btn');
-    btn.textContent = '已复制!';
-    setTimeout(() => btn.textContent = '复制密钥', 1500);
+    alert('API Key 已复制！');
   });
 }
 
-async function logout() {
-  await fetch('/api/auth/logout', { method: 'POST' });
-  window.location.href = '/login';
-}
-
-getUser();
-loadStats();
+loadUserInfo();
 </script>
 </body>
 </html>
