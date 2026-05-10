@@ -1,5 +1,5 @@
 """
-终点平台 - 认证模块
+终点网站平台 - 认证模块
 """
 import hashlib
 import uuid
@@ -57,15 +57,15 @@ def send_email_code(email: str, code: str, purpose: str = "注册验证") -> boo
     """发送邮箱验证码"""
     try:
         msg = MIMEMultipart()
-        msg['From'] = f"终点平台 <{SMTP_USER}>"
+        msg['From'] = f"终点网站平台 <{SMTP_USER}>"
         msg['To'] = email
-        msg['Subject'] = f"【终点】{purpose}验证码"
+        msg['Subject'] = f"【终点网站】{purpose}验证码"
         
         html = f"""
         <html>
         <body style="font-family: 'Microsoft YaHei', Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 16px 16px 0 0;">
-                <h1 style="color: white; margin: 0; font-size: 24px;">终点平台</h1>
+                <h1 style="color: white; margin: 0; font-size: 24px;">终点网站平台</h1>
             </div>
             <div style="background: #fff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 16px 16px;">
                 <p style="font-size: 16px; color: #333;">您好，</p>

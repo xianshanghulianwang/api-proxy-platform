@@ -1,5 +1,5 @@
 """
-终点平台 - API中转站 SaaS系统
+终点网站平台 - API中转SaaS系统
 """
 import os
 import sys
@@ -36,7 +36,7 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR.mkdir(exist_ok=True)
 TEMPLATES_DIR.mkdir(exist_ok=True)
 
-app = FastAPI(title="终点 - API中转站SaaS", version="2.0.0")
+app = FastAPI(title="终点网站 - API中转SaaS", version="2.0.0")
 
 # ==================== 辅助函数 ====================
 
@@ -1622,7 +1622,7 @@ async def api_admin_set_wechat_config(request: Request):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "终点API中转站", "version": "2.0.0"}
+    return {"status": "ok", "service": "终点网站API中转", "version": "2.0.0"}
 
 # ==================== 初始化 ====================
 

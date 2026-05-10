@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>终点 - API中转站 SaaS平台</title>
+<title>终点网站 - API中转SaaS平台</title>
 <style>
   :root {
     --primary: #667eea;
@@ -15,6 +15,8 @@
     --text-light: #64748b;
     --border: #e2e8f0;
     --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
@@ -30,6 +32,8 @@
   .nav-cta:hover { background: var(--primary-dark); }
   .nav-auth { display: flex; gap: 12px; align-items: center; }
   .nav-auth a { text-decoration: none; color: var(--text-light); font-size: 0.9rem; font-weight: 500; }
+  .status-dot { display: inline-block; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
   .hero { padding: 130px 0 80px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; position: relative; overflow: hidden; }
   .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(102,126,234,0.2) 0%, transparent 70%); border-radius: 50%; }
@@ -49,6 +53,7 @@
   .code-comment { color: #6b7280; }
   .code-key { color: #a78bfa; }
   .code-str { color: #34d399; }
+  .savings-badge { background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); color: #6ee7b7; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; margin-left: 8px; display: inline-block; vertical-align: middle; }
 
   .section { padding: 80px 0; }
   .section-label { text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
@@ -63,6 +68,16 @@
   .feature-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
   .feature-card p { font-size: 0.88rem; color: var(--text-light); line-height: 1.7; }
 
+  .comparison { background: var(--bg); }
+  .comparison-table { background: var(--surface); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+  .comparison-table table { width: 100%; border-collapse: collapse; }
+  .comparison-table th { background: var(--text); color: white; padding: 16px 24px; text-align: left; font-size: 0.9rem; font-weight: 600; }
+  .comparison-table th:nth-child(2) { color: var(--primary); }
+  .comparison-table td { padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table tr:hover td { background: rgba(102,126,234,0.04); }
+  .savings-row { color: var(--success); font-weight: 700; }
+
   .agent-section { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; }
   .agent-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   .agent-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 28px 20px; text-align: center; transition: all 0.3s; }
@@ -75,17 +90,28 @@
   .agent-commission p { margin: 4px 0; color: rgba(255,255,255,0.8); }
   .agent-btn { display: block; width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 24px; font-weight: 600; cursor: pointer; margin-top: 12px; transition: all 0.2s; }
   .agent-btn:hover { background: var(--primary-dark); }
+  .agent-how { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 32px; margin-top: 48px; }
+  .agent-how h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 24px; color: #fff; text-align: center; }
+  .agent-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .agent-step { text-align: center; }
+  .agent-step-num { width: 48px; height: 48px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; margin: 0 auto 12px; }
+  .agent-step h4 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .agent-step p { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
 
   .pricing { background: var(--bg); }
   .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   .price-card { background: var(--surface); border-radius: 20px; padding: 32px 24px; border: 2px solid var(--border); transition: all 0.3s; text-align: center; }
   .price-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+  .price-card.popular { border-color: var(--primary); background: linear-gradient(180deg, rgba(102,126,234,0.06) 0%, transparent 100%); }
+  .price-popular-badge { background: var(--primary); color: white; padding: 4px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block; margin-bottom: 12px; }
   .price-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
   .price-amount { font-size: 2.2rem; font-weight: 800; color: var(--primary); margin: 16px 0 4px; }
   .price-amount small { font-size: 0.9rem; font-weight: 500; color: var(--text-light); }
   .price-credits { font-size: 0.85rem; color: var(--text-light); margin-bottom: 20px; }
   .price-btn { display: block; padding: 11px; border-radius: 24px; font-weight: 700; font-size: 0.9rem; text-decoration: none; border: 2px solid var(--primary); color: var(--primary); transition: all 0.2s; }
   .price-btn:hover { background: var(--primary); color: #fff; }
+  .price-btn.filled { background: var(--primary); color: #fff; }
+  .price-btn.filled:hover { background: var(--primary-dark); }
 
   .models { background: var(--surface); }
   .models-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
@@ -93,6 +119,21 @@
   .model-item:hover { border-color: var(--primary); background: rgba(102,126,234,0.05); }
   .model-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
   .model-price { font-size: 0.8rem; color: var(--text-light); }
+  .model-price .official { text-decoration: line-through; color: #ccc; margin-right: 4px; }
+
+  .faq { background: var(--bg); }
+  .faq-list { max-width: 720px; margin: 0 auto; }
+  .faq-item { background: var(--surface); border-radius: 16px; padding: 24px; margin-bottom: 16px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+  .faq-item:hover { border-color: var(--primary); }
+  .faq-item h4 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+  .faq-item p { font-size: 0.9rem; color: var(--text-light); line-height: 1.7; display: none; }
+  .faq-item.open p { display: block; }
+  .faq-item.open h4 { color: var(--primary); }
+
+  .stats-bar { background: var(--surface); padding: 32px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
+  .stats-item .num { font-size: 2rem; font-weight: 800; color: var(--primary); }
+  .stats-item .label { font-size: 0.85rem; color: var(--text-light); margin-top: 4px; }
 
   .cta { background: linear-gradient(135deg, var(--primary-dark), var(--accent)); color: #fff; text-align: center; padding: 80px 0; }
   .cta h2 { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
@@ -119,13 +160,15 @@
     .pricing-grid { grid-template-columns: 1fr 1fr; }
     .models-grid { grid-template-columns: 1fr 1fr; }
     .footer-grid { grid-template-columns: 1fr 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .agent-steps { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 <nav>
   <div class="nav-inner">
-    <a href="/" class="logo">终点</a>
+    <a href="/" class="logo">终点网站</a>
     <ul class="nav-links">
       <li><a href="#features">功能特点</a></li>
       <li><a href="#pricing">套餐价格</a></li>
@@ -133,6 +176,7 @@
       <li><a href="/docs">API文档</a></li>
     </ul>
     <div class="nav-auth">
+      <span class="status-dot"></span><span style="font-size:0.75rem;color:#10b981;">服务正常</span>
       <a href="/login">登录</a>
       <a href="/register" class="nav-cta">立即注册</a>
     </div>
@@ -143,24 +187,24 @@
   <div class="container">
     <div class="hero-grid">
       <div>
-        <div class="hero-badge">🚀 1000+ 代理商正在使用</div>
-        <h1>终点</h1>
-        <p>专业的 API 中转站 SaaS 平台。聚合 MiniMax、DeepSeek、火山引擎等顶级模型，为代理商提供独立的中转站系统，让 API 调用更简单。</p>
+        <div class="hero-badge"><span class="status-dot"></span>🏆 1000+ 代理商信赖之选</div>
+        <h1>终点网站</h1>
+        <p>专业的 API 中转 SaaS 平台。聚合 MiniMax、DeepSeek、火山引擎等顶级模型，为代理商提供独立的中转站系统，让 API 调用更简单、更便宜。</p>
         <div class="hero-btns">
-          <a href="/register" class="btn-primary">免费注册 →</a>
+          <a href="/register" class="btn-primary">免费注册 <span class="savings-badge">送体验额度</span></a>
           <a href="/docs" class="btn-outline">查看API文档</a>
         </div>
         <div class="hero-stats">
           <div><div class="stat-num">99.9%</div><div class="stat-label">服务可用性</div></div>
-          <div><div class="stat-num">50ms</div><div class="stat-label">平均响应</div></div>
-          <div><div class="stat-num">¥0</div><div class="stat-label">月费/注册费</div></div>
+          <div><div class="stat-num">&lt;50ms</div><div class="stat-label">平均响应</div></div>
+          <div><div class="stat-num">¥0</div><div class="stat-label">注册费/月费</div></div>
         </div>
       </div>
       <div class="hero-code">
-        <div class="code-comment"># OpenAI 兼容接口</div>
-        <div class="code-comment"># 一行代码切换，零侵入</div><br>
+        <div class="code-comment"># OpenAI 兼容接口 · 一行代码接入</div>
+        <div class="code-comment"># 比官方便宜 30-70%，永久无需翻墙</div><br>
         <span class="code-key">import</span> openai<br><br>
-        openai.api_base = <span class="code-str">"https://你的中转站/v1"</span><br>
+        openai.api_base = <span class="code-str">"https://api.zhongdianwangzhan.com/v1"</span><br>
         openai.api_key = <span class="code-str">"你的API密钥"</span><br><br>
         chat = openai.ChatCompletion.create(<br>
         &nbsp;&nbsp;model=<span class="code-str">"MiniMax-Text-01"</span>,<br>
@@ -172,21 +216,32 @@
   </div>
 </section>
 
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stats-item"><div class="num">5000+</div><div class="label">注册用户</div></div>
+      <div class="stats-item"><div class="num">1000+</div><div class="label">活跃代理</div></div>
+      <div class="stats-item"><div class="num">1亿+</div><div class="label">日均API调用</div></div>
+      <div class="stats-item"><div class="num">99.9%</div><div class="label">服务可用率</div></div>
+    </div>
+  </div>
+</div>
+
 <section class="section features" id="features">
   <div class="container">
     <div class="section-label">核心优势</div>
-    <div class="section-title">为什么选择终点</div>
-    <div class="section-sub">技术领先，服务稳定，价格实惠</div>
+    <div class="section-title">为什么选择终点网站</div>
+    <div class="section-sub">技术领先，服务稳定，价格实惠，比官方节省30%-70%</div>
     <div class="feature-grid">
       <div class="feature-card">
         <div class="feature-icon">🔄</div>
         <h3>OpenAI 兼容接口</h3>
-        <p>完全兼容 OpenAI API 格式，修改一行代码即可接入。支持 GPT/Claude/DeepSeek 等主流模型。</p>
+        <p>完全兼容 OpenAI API 格式，修改一行代码即可接入。支持 GPT/Claude/DeepSeek 等主流模型，零侵入切换。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">⚡</div>
         <h3>极速响应</h3>
-        <p>多节点部署，智能路由选择最优线路。国内访问平均延迟低于 50ms。</p>
+        <p>多节点部署，智能路由选择最优线路。国内访问平均延迟低于 50ms，体验媲美官方直连。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">💰</div>
@@ -196,7 +251,7 @@
       <div class="feature-card">
         <div class="feature-icon">🔒</div>
         <h3>安全可靠</h3>
-        <p>所有请求走 HTTPS 加密传输，密钥隔离存储，每日用量实时统计。</p>
+        <p>所有请求走 HTTPS 加密传输，密钥隔离存储，每日用量实时统计，全程透明。</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📊</div>
@@ -212,13 +267,79 @@
   </div>
 </section>
 
+<section class="section comparison" id="comparison">
+  <div class="container">
+    <div class="section-label">价格对比</div>
+    <div class="section-title">比官方更便宜</div>
+    <div class="section-sub">同样的模型，更低的价格，省下的都是利润</div>
+    <div class="comparison-table">
+      <table>
+        <thead>
+          <tr>
+            <th>模型</th>
+            <th>终点网站价格</th>
+            <th>官方参考价</th>
+            <th>节省比例</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>MiniMax-Text-01</td>
+            <td style="color:var(--primary);font-weight:700;">¥0.001/千tokens</td>
+            <td style="color:#999;">¥0.012/千tokens</td>
+            <td class="savings-row">节省 92%</td>
+          </tr>
+          <tr>
+            <td>DeepSeek-V3</td>
+            <td style="color:var(--primary);font-weight:700;">¥0.001/千tokens</td>
+            <td style="color:#999;">¥0.001/千tokens</td>
+            <td class="savings-row">官方同价</td>
+          </tr>
+          <tr>
+            <td>Doubao-Pro</td>
+            <td style="color:var(--primary);font-weight:700;">¥0.003/千tokens</td>
+            <td style="color:#999;">¥0.005/千tokens</td>
+            <td class="savings-row">节省 40%</td>
+          </tr>
+          <tr>
+            <td>GPT-4o</td>
+            <td style="color:var(--primary);font-weight:700;">¥0.02/千tokens</td>
+            <td style="color:#999;">¥0.105/千tokens</td>
+            <td class="savings-row">节省 81%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <section class="section agent-section" id="agent">
   <div class="container">
     <div class="section-label" style="color: #a5b4fc;">代理加盟</div>
-    <div class="section-title" style="color: #fff;">成为终点代理 开启创业之路</div>
-    <div class="section-sub" style="color: rgba(255,255,255,0.7);">付费开通代理，拥有独立的中转站系统，发展下线获得佣金</div>
+    <div class="section-title" style="color: #fff;">成为终点网站代理 开启创业之路</div>
+    <div class="section-sub" style="color: rgba(255,255,255,0.7);">付费开通代理，拥有独立的中转站系统，发展下线获得三级佣金，躺赚被动收入</div>
     <div class="agent-grid" id="agentTiers">
       <!-- 动态加载 -->
+    </div>
+    <div class="agent-how">
+      <h3>代理如何赚钱？</h3>
+      <div class="agent-steps">
+        <div class="agent-step">
+          <div class="agent-step-num">1</div>
+          <h4>开通代理</h4>
+          <p>选择代理等级，付费入驻，获得独立管理后台</p>
+        </div>
+        <div class="agent-step">
+          <div class="agent-step-num">2</div>
+          <h4>发展下线</h4>
+          <p>分享你的推荐链接或注册码，让用户通过你注册</p>
+        </div>
+        <div class="agent-step">
+          <div class="agent-step-num">3</div>
+          <h4>躺赚佣金</h4>
+          <p>下线充值消费，你获得高达25%的三级分销佣金</p>
+        </div>
+      </div>
     </div>
     <div style="text-align:center;margin-top:40px;">
       <a href="/register" class="btn-primary" style="display:inline-flex;">立即注册成为代理 →</a>
@@ -230,7 +351,7 @@
   <div class="container">
     <div class="section-label">套餐价格</div>
     <div class="section-title">按需选择，灵活付费</div>
-    <div class="section-sub">无月费，按实际消耗计费，余额永不过期</div>
+    <div class="section-sub">无月费，按实际消耗计费，余额永不过期 · 所有套餐均支持支付宝</div>
     <div class="pricing-grid" id="pricingGrid">
       <div style="text-align:center;padding:40px;color:var(--text-light)">加载中...</div>
     </div>
@@ -246,13 +367,58 @@
     <div class="section-title">覆盖主流大模型</div>
     <div class="section-sub">持续接入最新模型，一个平台全部搞定</div>
     <div class="models-grid">
-      <div class="model-item"><div class="model-name">MiniMax-Text</div><div class="model-price">¥0/千tokens起</div></div>
-      <div class="model-item"><div class="model-name">DeepSeek-V3</div><div class="model-price">¥0/千tokens起</div></div>
-      <div class="model-item"><div class="model-name">Doubao-Pro</div><div class="model-price">¥0/千tokens起</div></div>
-      <div class="model-item"><div class="model-name">更多模型...</div><div class="model-price">持续接入中</div></div>
+      <div class="model-item">
+        <div class="model-name">MiniMax-Text-01</div>
+        <div class="model-price"><span class="official">¥0.012</span> ¥0.001/千tokens</div>
+      </div>
+      <div class="model-item">
+        <div class="model-name">DeepSeek-V3</div>
+        <div class="model-price">¥0.001/千tokens</div>
+      </div>
+      <div class="model-item">
+        <div class="model-name">Doubao-Pro</div>
+        <div class="model-price"><span class="official">¥0.005</span> ¥0.003/千tokens</div>
+      </div>
+      <div class="model-item">
+        <div class="model-name">更多模型...</div>
+        <div class="model-price">持续接入中</div>
+      </div>
     </div>
     <div style="text-align:center;margin-top:32px;">
       <a href="/docs" class="btn-primary" style="display:inline-flex;background:var(--text);">阅读API文档 →</a>
+    </div>
+  </div>
+</section>
+
+<section class="section faq" id="faq">
+  <div class="container">
+    <div class="section-label">常见问题</div>
+    <div class="section-title">有问题？这里有答案</div>
+    <div class="faq-list">
+      <div class="faq-item open" onclick="this.classList.toggle('open')">
+        <h4>Q: 需要翻墙才能使用吗？</h4>
+        <p>A: 完全不需要。终点网站部署在国内服务器，访问稳定快速，永久无需翻墙。</p>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <h4>Q: 余额会过期吗？</h4>
+        <p>A: 不会。余额永久有效，用多少扣多少，没有任何时间限制。</p>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <h4>Q: 如何成为代理商？</h4>
+        <p>A: 注册账号后进入"代理中心"，选择代理等级付费入驻，即可获得推荐链接和独立后台。</p>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <h4>Q: 佣金如何提现？</h4>
+        <p>A: 佣金满100元即可申请提现，支持微信、支付宝、银行转账，提现后1-3个工作日到账。</p>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <h4>Q: 支持哪些支付方式？</h4>
+        <p>A: 支持支付宝、微信支付、银行卡转账等多种方式，充值即时到账。</p>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <h4>Q: API调用有频率限制吗？</h4>
+        <p>A: 根据套餐不同有不同的调用限制，具体请查看套餐详情或联系客服。</p>
+      </div>
     </div>
   </div>
 </section>
@@ -269,8 +435,8 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <h3>终点</h3>
-        <p>专业的 API 中转站 SaaS 平台，为代理商和开发者提供稳定、快速、便宜的 AI 模型调用服务。</p>
+        <h3>终点网站</h3>
+        <p>专业的 API 中转 SaaS 平台，为代理商和开发者提供稳定、快速、便宜的 AI 模型调用服务。</p>
       </div>
       <div class="footer-col">
         <h4>产品</h4>
@@ -284,7 +450,7 @@
       <div class="footer-col">
         <h4>支持</h4>
         <ul>
-          <li><a href="#">常见问题</a></li>
+          <li><a href="#faq">常见问题</a></li>
           <li><a href="#">服务条款</a></li>
           <li><a href="#">隐私政策</a></li>
           <li><a href="#">联系客服</a></li>
@@ -293,13 +459,13 @@
       <div class="footer-col">
         <h4>联系我们</h4>
         <ul>
-          <li><a href="#">support@zhongdian.com</a></li>
-          <li><a href="#">微信：zhongdian001</a></li>
+          <li><a href="#">support@zhongdianwangzhan.com</a></li>
+          <li><a href="#">微信：zdwangzhan001</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      © 2025 终点 · 让 API 调用更简单
+      © 2025 终点网站 · 让 API 调用更简单
     </div>
   </div>
 </footer>
@@ -311,14 +477,15 @@ async function loadPackages() {
     const json = await res.json();
     if (json.code === 0) {
       const grid = document.getElementById('pricingGrid');
-      grid.innerHTML = json.data.map(p => `
-        <div class="price-card">
+      grid.innerHTML = json.data.map((p, i) => `
+        <div class="price-card ${i === 1 ? 'popular' : ''}">
+          ${i === 1 ? '<div class="price-popular-badge">最受欢迎</div>' : ''}
           <h3>${p.name}</h3>
           <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:8px;">${p.description || ''}</p>
           <div class="price-amount">¥${p.price}${p.price === 0 ? '' : '<small>元</small>'}</div>
           <div class="price-credits">${p.credits > 0 ? p.credits + ' 额度点' : '联系客服'}</div>
           <div style="font-size:0.78rem;color:var(--text-light);margin-bottom:16px;">有效期 ${p.validity_days} 天</div>
-          <a href="/register" class="price-btn">${p.price === 0 ? '联系客服' : '立即购买'}</a>
+          <a href="/register" class="price-btn ${i === 1 ? 'filled' : ''}">${p.price === 0 ? '联系客服' : '立即购买'}</a>
         </div>
       `).join('');
     }
@@ -334,7 +501,7 @@ async function loadAgentTiers() {
       grid.innerHTML = json.data.map((t, i) => `
         <div class="agent-card ${i === 1 ? 'popular' : ''}">
           <div class="agent-name">${t.name}</div>
-          <div class="agent-price">¥${t.price}<small>/次</small></div>
+          <div class="agent-price">¥${t.price}<small>/入驻费</small></div>
           <div class="agent-commission">
             <p>一级佣金: ${(t.commission_l1 * 100).toFixed(0)}%</p>
             <p>二级佣金: ${(t.commission_l2 * 100).toFixed(0)}%</p>

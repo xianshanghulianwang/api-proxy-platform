@@ -1,5 +1,5 @@
 """
-终点平台 - 数据库模块
+终点网站平台 - 数据库模块
 """
 import sqlite3
 import uuid
@@ -335,7 +335,7 @@ def init_db():
     cur.execute("SELECT COUNT(*) FROM config")
     if cur.fetchone()[0] == 0:
         configs = [
-            ("platform_name", "终点"),
+            ("platform_name", "终点网站"),
             ("platform_logo", ""),
             ("contact_wechat", "zhongdian001"),
             ("contact_email", "support@zhongdian.com"),
@@ -354,7 +354,7 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("[DB] 数据库初始化完成 - 终点平台 v2.0")
+    print("[DB] 数据库初始化完成 - 终点网站平台 v2.0")
 
 if __name__ == "__main__":
     init_db()

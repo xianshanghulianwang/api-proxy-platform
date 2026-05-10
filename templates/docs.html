@@ -3,110 +3,182 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>API文档 - API智 Hub</title>
+<title>API文档 - 终点网站</title>
 <style>
-:root{--primary:#6366F1;--bg:#F8FAFC;--surface:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;}
+:root{--primary:#6366F1;--primary-dark:#4F46E5;--bg:#F8FAFC;--surface:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);}
 nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;}
 .logo{font-size:1.2rem;font-weight:800;color:var(--primary);text-decoration:none;}
+.toc{position:fixed;right:24px;top:80px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;width:200px;display:none;}
+@media(min-width:1200px){.toc{display:block;}}
+.toc h4{font-size:0.8rem;font-weight:700;color:var(--text-light);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+.toc a{display:block;padding:4px 0;font-size:0.85rem;color:var(--text-light);text-decoration:none;}
+.toc a:hover{color:var(--primary);}
 .container{max-width:900px;margin:40px auto;padding:0 24px;}
 h1{font-size:1.8rem;font-weight:800;margin-bottom:8px;}
-h2{font-size:1.3rem;font-weight:700;margin:32px 0 16px;border-bottom:2px solid var(--border);padding-bottom:8px;}
-h3{font-size:1.05rem;font-weight:700;margin:16px 0 8px;color:var(--primary);}
-pre{background:#1E1B4B;border-radius:12px;padding:20px;font-family:'Courier New',monospace;font-size:0.85rem;color:#E0E7FF;overflow:auto;line-height:1.7;margin:12px 0;}
+h2{font-size:1.3rem;font-weight:700;margin:40px 0 16px;border-bottom:2px solid var(--border);padding-bottom:8px;}
+h3{font-size:1.05rem;font-weight:700;margin:20px 0 8px;color:var(--primary);}
+pre{background:#1E1B4B;border-radius:12px;padding:20px;font-family:'Courier New',monospace;font-size:0.82rem;color:#E0E7FF;overflow:auto;line-height:1.7;margin:12px 0;}
 code{background:#F1F5F9;padding:2px 6px;border-radius:4px;font-size:0.88rem;color:#6366F1;font-family:'Courier New',monospace;}
-.desc{margin:16px 0;font-size:0.95rem;line-height:1.7;color:var(--text-light);}
+.desc{margin:12px 0;font-size:0.95rem;line-height:1.7;color:var(--text-light);}
 table{width:100%;border-collapse:collapse;margin:12px 0;}
 th,td{padding:10px 14px;border:1px solid var(--border);text-align:left;font-size:0.88rem;}
 th{background:#F8FAFC;font-weight:600;color:var(--text-light);}
 .alert{background:#F0F9FF;border:1px solid #BAE6FD;border-radius:10px;padding:14px 16px;font-size:0.9rem;color:#0369A1;margin:16px 0;}
+.alert.success{background:#F0FDF4;border-color:#BBF7D0;color:#166534;}
+.alert.warning{background:#FFFBEB;border-color:#FDE68A;color:#92400E;}
+.alert.danger{background:#FEF2F2;border-color:#FECACA;color:#991B1B;}
 .back{display:inline-block;margin-top:24px;color:var(--primary);text-decoration:none;font-weight:600;}
+.nav2{display:flex;gap:24px;margin:24px 0;flex-wrap:wrap;}
+.nav2 a{padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:0.88rem;font-weight:600;color:var(--text);text-decoration:none;}
+.nav2 a:hover,.nav2 a.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.copy-btn{float:right;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:2px 10px;border-radius:6px;cursor:pointer;font-size:0.75rem;}
+.copy-btn:hover{background:rgba(255,255,255,0.2);}
 </style>
 </head>
 <body>
-<nav><a href="/" class="logo">⚡ API智 Hub</a></nav>
+<nav><a href="/" class="logo">⚡ 终点网站</a></nav>
 <div class="container">
   <a href="/" class="back">← 返回首页</a>
-  <h1 style="margin-top:24px;">API 文档</h1>
-  <p class="desc">API智 Hub 提供 OpenAI 兼容接口，一行代码切换，零侵入接入。</p>
+  <h1 style="margin-top:24px;">API 文档中心</h1>
+  <p class="desc">终点网站 提供 OpenAI 兼容接口，一行代码切换，零侵入接入。支持所有 OpenAI SDK，让你的应用轻松切换。</p>
 
-  <h2>接入地址</h2>
-  <pre>https://your-domain/v1/chat/completions</pre>
+  <div class="nav2">
+    <a href="#quickstart">快速开始</a>
+    <a href="#auth">认证</a>
+    <a href="#models">模型</a>
+    <a href="#params">参数</a>
+    <a href="#response">响应</a>
+    <a href="#errors">错误码</a>
+    <a href="#stream">流式输出</a>
+    <a href="#sdks">SDK</a>
+  </div>
 
-  <h2>认证方式</h2>
-  <p class="desc">在请求头中使用 <code>Authorization</code> 字段，值为 <code>Bearer 你的API密钥</code></p>
-  <pre>Authorization: Bearer AK-xxxxxxxx-xxxxxxxx</pre>
+  <h2 id="quickstart">快速开始</h2>
+  <h3>1. 注册获取 API Key</h3>
+  <p class="desc">登录后进入「控制台 → API密钥」创建你的密钥。密钥格式为 <code>sk-xxxxxxxx-xxxxxxxx</code>。</p>
 
-  <h2>请求示例（cURL）</h2>
-  <pre>curl https://your-domain/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer 你的API密钥" \
-  -d '{
-    "model": "MiniMax-Text-01",
-    "messages": [
-      {"role": "system", "content": "你是一个有帮助的助手"},
-      {"role": "user", "content": "你好，请介绍一下你自己"}
-    ],
-    "temperature": 0.7,
-    "max_tokens": 1000
-  }'</pre>
+  <h3>2. 一行代码接入</h3>
+  <pre><span class="copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.innerText.replace('复制',''))">复制</span><span style="color:#6b7280"># Python - OpenAI SDK</span>
+<span style="color:#a78bfa">import</span> openai
+openai.api_base = <span style="color:#34d399">"https://api.zhongdianwangzhan.com/v1"</span>
+openai.api_key = <span style="color:#34d399">"sk-your-key-here"</span>
 
-  <h2>Python SDK 示例</h2>
-  <pre>import openai
+chat = openai.ChatCompletion.create(
+    model=<span style="color:#34d399">"MiniMax-Text-01"</span>,
+    messages=[{<span style="color:#a78bfa">"role"</span>: <span style="color:#34d399">"user"</span>, <span style="color:#a78bfa">"content"</span>: <span style="color:#34d399">"你好"</span>}]
+)
+<span style="color:#6b7280">print(chat.choices[0].message.content)</span></pre>
 
-openai.api_base = "https://your-domain/v1"
-openai.api_key = "AK-xxxxxxxx-xxxxxxxx"
+  <h3>3. 完整示例</h3>
+  <pre><span class="copy-btn">复制</span><span style="color:#a78bfa">import</span> openai
+
+openai.api_base = <span style="color:#34d399">"https://api.zhongdianwangzhan.com/v1"</span>
+openai.api_key = <span style="color:#34d399">"sk-your-key-here"</span>
 
 response = openai.ChatCompletion.create(
-    model = "MiniMax-Text-01",
-    messages = [{"role": "user", "content": "你好"}],
-    temperature = 0.7,
-    max_tokens = 1000
+    model=<span style="color:#34d399">"MiniMax-Text-01"</span>,
+    messages=[
+        {<span style="color:#a78bfa">"role"</span>: <span style="color:#34d399">"system"</span>, <span style="color:#a78bfa">"content"</span>: <span style="color:#34d399">"你是一个专业、有帮助的AI助手"</span>},
+        {<span style="color:#a78bfa">"role"</span>: <span style="color:#34d399">"user"</span>, <span style="color:#a78bfa">"content"</span>: <span style="color:#34d399">"你好，请介绍一下你自己"</span>}
+    ],
+    temperature=<span style="color:#f59e0b">0.7</span>,
+    max_tokens=<span style="color:#f59e0b">1000</span>
 )
 
-print(response.choices[0].message.content)</pre>
+<span style="color:#6b7280">print(response.choices[0].message.content)</span></pre>
 
-  <h2>请求参数</h2>
+  <h2 id="auth">认证方式</h2>
+  <p class="desc">所有请求需要在 Header 中携带 API Key。使用 Bearer Token 认证方式。</p>
+  <pre><span class="copy-btn">复制</span>Authorization: Bearer sk-your-key-here</pre>
+
+  <h2 id="models">支持模型</h2>
+  <table>
+    <tr><th>模型标识</th><th>供应商</th><th>说明</th><th>参考价格</th></tr>
+    <tr><td><code>MiniMax-Text-01</code></td><td>MiniMax</td><td>高性能文本模型</td><td>¥0.001/千tokens</td></tr>
+    <tr><td><code>deepseek-chat</code></td><td>DeepSeek</td><td>深度推理对话模型</td><td>¥0.001/千tokens</td></tr>
+    <tr><td><code>doubao-pro</code></td><td>火山引擎</td><td>豆包Pro模型</td><td>¥0.003/千tokens</td></tr>
+    <tr><td><code>gpt-4o</code></td><td>OpenAI</td><td>GPT-4o模型</td><td>¥0.02/千tokens</td></tr>
+  </table>
+
+  <h2 id="params">请求参数</h2>
   <table>
     <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
-    <tr><td>model</td><td>string</td><td>是</td><td>模型名称，如 MiniMax-Text-01</td></tr>
-    <tr><td>messages</td><td>array</td><td>是</td><td>对话消息列表</td></tr>
-    <tr><td>temperature</td><td>float</td><td>否</td><td>采样温度，0-2，默认0.7</td></tr>
-    <tr><td>max_tokens</td><td>integer</td><td>否</td><td>最大输出Token数</td></tr>
-    <tr><td>stream</td><td>boolean</td><td>否</td><td>是否流式输出，默认false</td></tr>
+    <tr><td>model</td><td>string</td><td>是</td><td>模型标识，如 MiniMax-Text-01</td></tr>
+    <tr><td>messages</td><td>array</td><td>是</td><td>对话消息列表，每条消息需包含 role 和 content</td></tr>
+    <tr><td>temperature</td><td>float</td><td>否</td><td>采样温度，范围 0-2，默认 0.7。值越大越有创造性</td></tr>
+    <tr><td>max_tokens</td><td>integer</td><td>否</td><td>最大输出 Token 数，默认受模型最大长度限制</td></tr>
+    <tr><td>top_p</td><td>float</td><td>否</td><td>核采样概率，默认 1.0</td></tr>
+    <tr><td>stream</td><td>boolean</td><td>否</td><td>是否流式输出，默认 false</td></tr>
+    <tr><td>stop</td><td>string/array</td><td>否</td><td>遇到指定字符串时停止生成</td></tr>
+    <tr><td>frequency_penalty</td><td>float</td><td>否</td><td>频率惩罚，范围 -2.0 到 2.0</td></tr>
+    <tr><td>presence_penalty</td><td>float</td><td>否</td><td>存在惩罚，范围 -2.0 到 2.0</td></tr>
   </table>
 
-  <h2>支持模型</h2>
-  <table>
-    <tr><th>模型标识</th><th>供应商</th><th>说明</th></tr>
-    <tr><td>MiniMax-Text-01</td><td>MiniMax</td><td>MiniMax文本模型，响应快速</td></tr>
-    <tr><td>deepseek-chat</td><td>DeepSeek</td><td>DeepSeek对话模型，高性价比</td></tr>
-    <tr><td>doubao-pro</td><td>火山引擎</td><td>豆包Pro模型，稳定性好</td></tr>
-  </table>
-
-  <h2>响应格式</h2>
+  <h2 id="response">响应格式</h2>
+  <p class="desc">响应格式与 OpenAI 完全兼容，可直接使用 OpenAI SDK 解析。</p>
   <pre>{
-  "id": "chatcmpl-xxxx",
-  "object": "chat.completion",
-  "created": 1700000000,
-  "model": "MiniMax-Text-01",
-  "choices": [{
-    "index": 0,
-    "message": {
-      "role": "assistant",
-      "content": "你好！有什么可以帮助你的吗？"
+  <span style="color:#a78bfa">"id"</span>: <span style="color:#34d399">"chatcmpl-xxxxx"</span>,
+  <span style="color:#a78bfa">"object"</span>: <span style="color:#34d399">"chat.completion"</span>,
+  <span style="color:#a78bfa">"created"</span>: <span style="color:#f59e0b">1700000000</span>,
+  <span style="color:#a78bfa">"model"</span>: <span style="color:#34d399">"MiniMax-Text-01"</span>,
+  <span style="color:#a78bfa">"choices"</span>: [{
+    <span style="color:#a78bfa">"index"</span>: <span style="color:#f59e0b">0</span>,
+    <span style="color:#a78bfa">"message"</span>: {
+      <span style="color:#a78bfa">"role"</span>: <span style="color:#34d399">"assistant"</span>,
+      <span style="color:#a78bfa">"content"</span>: <span style="color:#34d399">"你好！有什么可以帮助你的吗？"</span>
     },
-    "finish_reason": "stop"
+    <span style="color:#a78bfa">"finish_reason"</span>: <span style="color:#34d399">"stop"</span>
   }],
-  "usage": {
-    "prompt_tokens": 20,
-    "completion_tokens": 50,
-    "total_tokens": 70
+  <span style="color:#a78bfa">"usage"</span>: {
+    <span style="color:#a78bfa">"prompt_tokens"</span>: <span style="color:#f59e0b">20</span>,
+    <span style="color:#a78bfa">"completion_tokens"</span>: <span style="color:#f59e0b">50</span>,
+    <span style="color:#a78bfa">"total_tokens"</span>: <span style="color:#f59e0b">70</span>
   }
 }</pre>
 
-  <div class="alert">💡 <strong>计费说明：</strong>按实际消耗的输入+输出Token数计费，从账户余额中扣除。</div>
+  <h2 id="errors">错误码</h2>
+  <div class="alert danger"><strong>401 Unauthorized</strong> — API Key 无效或已过期，请检查密钥是否正确。</div>
+  <div class="alert danger"><strong>403 Forbidden</strong> — 余额不足，请先充值后再试。</div>
+  <div class="alert danger"><strong>429 Rate Limited</strong> — 请求过于频繁，请降低调用频率或升级套餐。</div>
+  <div class="alert danger"><strong>500 Internal Error</strong> — 服务器内部错误，稍后重试或联系客服。</div>
+  <div class="alert danger"><strong>503 Service Unavailable</strong> — 上游服务暂时不可用，已自动切换备用线路。</div>
+
+  <h2 id="stream">流式输出（SSE）</h2>
+  <p class="desc">设置 <code>stream: true</code> 启用 Server-Sent Events 流式输出，适合实时对话场景。</p>
+  <pre><span class="copy-btn">复制</span><span style="color:#a78bfa">import</span> openai
+
+openai.api_base = <span style="color:#34d399">"https://api.zhongdianwangzhan.com/v1"</span>
+openai.api_key = <span style="color:#34d399">"sk-your-key-here"</span>
+
+stream = openai.ChatCompletion.create(
+    model=<span style="color:#34d399">"MiniMax-Text-01"</span>,
+    messages=[{<span style="color:#a78bfa">"role"</span>: <span style="color:#34d399">"user"</span>, <span style="color:#a78bfa">"content"</span>: <span style="color:#34d399">"写一首诗"</span>}],
+    stream=<span style="color:#f59e0b">True</span>
+)
+<span style="color:#a78bfa">for</span> chunk <span style="color:#a78bfa">in</span> stream:
+    <span style="color:#a78bfa">print</span>(chunk.choices[0].delta.content, end=<span style="color:#34d399">""</span>, flush=<span style="color:#f59e0b">True</span>)</pre>
+
+  <h2 id="sdks">多语言 SDK</h2>
+  <div class="alert success"><strong>Python:</strong> <code>pip install openai</code> — 直接使用 OpenAI 官方 SDK，无需额外安装</div>
+  <div class="alert success"><strong>Node.js:</strong> <code>npm install openai</code> — 官方 Node.js SDK 完美兼容</div>
+  <div class="alert success"><strong>Go:</strong> <code>go get github.com/sashabaranov/go-openai</code> — 社区主流 Go SDK</div>
+  <div class="alert success"><strong>Java:</strong> 使用 HTTP 请求直接调用，参考上方 cURL 示例</div>
+
+  <h2>计费说明</h2>
+  <div class="alert warning"><strong>计费规则：</strong>按实际消耗的输入 Token + 输出 Token 数量计费，从账户余额中实时扣除。余额永不过期。</div>
+  <table>
+    <tr><th>套餐</th><th>价格</th><th>额度</th><th>有效期</th></tr>
+    <tr><td>体验版</td><td>¥9.9</td><td>100 点</td><td>7 天</td></tr>
+    <tr><td>基础版</td><td>¥49</td><td>1000 点</td><td>30 天</td></tr>
+    <tr><td>进阶版</td><td>¥199</td><td>5000 点</td><td>30 天</td></tr>
+    <tr><td>旗舰版</td><td>¥599</td><td>20000 点</td><td>30 天</td></tr>
+  </table>
+
+  <h2>联系支持</h2>
+  <p class="desc">如有问题或需要技术支持，请联系客服微信：<strong>zdwangzhan001</strong> 或发送邮件至 <strong>support@zhhongdianwangzhan.com</strong></p>
+  <div style="height:60px"></div>
 </div>
 </body>
 </html>

@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>套餐价格 - API智 Hub</title>
+<title>套餐价格 - 终点网站</title>
 <style>
-:root{--primary:#6366F1;--primary-dark:#4F46E5;--bg:#F8FAFC;--surface:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;}
+:root{--primary:#6366F1;--primary-dark:#4F46E5;--bg:#F8FAFC;--surface:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;--success:#10B981;}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);}
 nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;}
@@ -16,11 +16,11 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 .container{max-width:960px;margin:60px auto;padding:0 24px;}
 .page-title{text-align:center;font-size:2.2rem;font-weight:800;margin-bottom:8px;}
 .page-sub{text-align:center;color:var(--text-light);margin-bottom:48px;}
+.badge{display:inline-block;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:4px 16px;border-radius:20px;font-size:0.75rem;font-weight:700;margin-bottom:12px;}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;}
-.card{background:var(--surface);border-radius:20px;padding:32px 24px;border:2px solid var(--border);text-align:center;transition:all 0.3s;}
-.card:hover{border-color:var(--primary);transform:translateY(-3px);}
-.card.popular{border-color:var(--primary);background:#EEF2FF;}
-.popular-badge{display:inline-block;background:var(--primary);color:white;padding:4px 16px;border-radius:20px;font-size:0.75rem;font-weight:700;margin-bottom:12px;}
+.card{background:var(--surface);border-radius:20px;padding:32px 24px;border:2px solid var(--border);text-align:center;transition:all 0.3s;position:relative;}
+.card:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:0 12px 32px rgba(102,126,234,0.12);}
+.card.popular{border-color:var(--primary);background:linear-gradient(180deg,#EEF2FF 0%,var(--surface) 40%);}
 .card h3{font-size:1.1rem;font-weight:700;margin-bottom:8px;}
 .card .desc{font-size:0.85rem;color:var(--text-light);margin-bottom:16px;min-height:40px;}
 .price{font-size:2.2rem;font-weight:800;color:var(--primary);margin:12px 0 4px;}
@@ -31,11 +31,22 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 .btn.filled{background:var(--primary);color:white;}
 .btn.filled:hover{background:var(--primary-dark);}
 .note{text-align:center;color:var(--text-light);font-size:0.88rem;margin-top:32px;}
+.features-section{margin-top:60px;}
+.features-section h2{text-align:center;font-size:1.8rem;font-weight:800;margin-bottom:32px;}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.feature-item{background:var(--surface);border-radius:16px;padding:20px 24px;display:flex;align-items:flex-start;gap:12px;border:1px solid var(--border);}
+.feature-item .icon{font-size:1.4rem;flex-shrink:0;}
+.feature-item h4{font-size:0.95rem;font-weight:700;margin-bottom:4px;}
+.feature-item p{font-size:0.85rem;color:var(--text-light);}
+.payment-section{margin-top:60px;text-align:center;}
+.payment-section h2{font-size:1.5rem;font-weight:800;margin-bottom:16px;}
+.payment-icons{display:flex;justify-content:center;gap:24px;margin-top:16px;flex-wrap:wrap;}
+.payment-icon{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 24px;display:flex;align-items:center;gap:8px;font-size:0.9rem;font-weight:600;}
 </style>
 </head>
 <body>
 <nav>
-  <a href="/" class="logo">⚡ API智 Hub</a>
+  <a href="/" class="logo">⚡ 终点网站</a>
   <ul class="nav-links">
     <li><a href="/">首页</a></li>
     <li><a href="/docs">API文档</a></li>
@@ -47,14 +58,54 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
   <div class="page-title">套餐价格</div>
   <div class="page-sub">灵活计费，余额永不过期，适合各种规模的使用场景</div>
   <div class="grid" id="pkgGrid"></div>
-  <div class="note">💳 所有套餐均支持支付宝支付 · 余额永不过期 · 客服微信：apihub001</div>
+  
+  <div class="features-section">
+    <h2>所有套餐均包含</h2>
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="icon">🔒</div>
+        <div><h4>API安全</h4><p>HTTPS加密传输，密钥隔离存储</p></div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">📊</div>
+        <div><h4>用量统计</h4><p>实时用量面板，费用明细一目了然</p></div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">🔄</div>
+        <div><h4>OpenAI兼容</h4><p>一行代码切换，零侵入接入</p></div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">⚡</div>
+        <div><h4>极速响应</h4><p>国内节点，平均延迟低于50ms</p></div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">🛡️</div>
+        <div><h4>稳定可靠</h4><p>99.9%服务可用性，多节点容灾</p></div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">💬</div>
+        <div><h4>技术支持</h4><p>微信客服，在线解答</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="payment-section">
+    <h2>支付方式</h2>
+    <div class="payment-icons">
+      <div class="payment-icon">💳 支付宝</div>
+      <div class="payment-icon">💬 微信支付</div>
+      <div class="payment-icon">🏦 银行卡转账</div>
+    </div>
+  </div>
+
+  <div class="note">💳 所有套餐均支持支付宝/微信支付 · 余额永不过期 · 客服微信：zdwangzhan001</div>
 </div>
 <script>
 fetch('/api/packages').then(r=>r.json()).then(j=>{
   if(j.code!==0) return;
   document.getElementById('pkgGrid').innerHTML=j.data.map((p,i)=>`
     <div class="card ${i===1?'popular':''}">
-      ${i===1?'<div class="popular-badge">最受欢迎</div>':''}
+      ${i===1?'<div class="badge">最受欢迎</div>':''}
       <h3>${p.name}</h3>
       <div class="desc">${p.description||''}</div>
       <div class="price">¥${p.price}${p.price===0?'':'<small>元</small>'}</div>
