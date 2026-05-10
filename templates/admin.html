@@ -215,6 +215,10 @@ tr:last-child td { border-bottom: none; }
       <i class="fas fa-key"></i>
       <span>API Key管理</span>
     </div>
+    <div class="sidebar-item" onclick="showPage('subkeys')">
+      <i class="fas fa-sitemap"></i>
+      <span>子密钥管理</span>
+    </div>
   </div>
   
   <div class="sidebar-section">
@@ -547,6 +551,117 @@ tr:last-child td { border-bottom: none; }
     </div>
   </div>
   
+  <!-- 子Key管理 -->
+  <div class="page" id="page-subkeys">
+    <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:24px;">子密钥管理</h1>
+    
+    <div class="alert" style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.2);">
+      <i class="fas fa-lightbulb" style="color:var(--primary);"></i>
+      <div>
+        <strong>子密钥说明：</strong>从上游 API Key 派生出多个独立的子密钥，每个子密钥可设置不同的价格、限速、用量限制和时间。<br>
+        子密钥用户调用时走平台代理，<strong>不会暴露原始上游密钥</strong>。
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-plus"></i> 创建子密钥</div>
+      </div>
+      <div class="card-body">
+        <form id="subkeyForm">
+          <div class="form-grid">
+            <div class="form-item">
+              <label>所属上游Key</label>
+              <select name="parent_key_id" id="parentKeySelect" required>
+                <option value="">请选择上游Key</option>
+              </select>
+            </div>
+            <div class="form-item">
+              <label>子Key名称</label>
+              <input type="text" name="key_name" placeholder="如：用户A专属Key" required>
+            </div>
+          </div>
+          
+          <div class="form-grid">
+            <div class="form-item">
+              <label>售价（元/千Token）</label>
+              <input type="number" name="price_per_1k" step="0.0001" value="0.001" required>
+            </div>
+            <div class="form-item">
+              <label>每日调用上限</label>
+              <input type="number" name="daily_limit" value="10000" required>
+            </div>
+          </div>
+          
+          <div class="form-grid">
+            <div class="form-item">
+              <label>每分钟限速（次/分钟）</label>
+              <input type="number" name="rate_limit" value="60" required>
+            </div>
+            <div class="form-item">
+              <label>每月用量上限（Token）</label>
+              <input type="number" name="monthly_limit" value="100000" required>
+            </div>
+          </div>
+          
+          <div class="form-grid">
+            <div class="form-item">
+              <label>过期时间</label>
+              <input type="date" name="expires_at" id="expiresAtInput">
+              <small style="color:var(--text-secondary);font-size:0.78rem;">留空表示永不过期</small>
+            </div>
+            <div class="form-item">
+              <label>分配给用户</label>
+              <select name="user_id" id="userSelect">
+                <option value="">不指定用户（公开）</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style="display:flex;gap:12px;">
+            <button type="button" class="btn btn-primary" onclick="generateSubKeys()">
+              <i class="fas fa-magic"></i> 生成1个
+            </button>
+            <button type="button" class="btn btn-outline" onclick="generateMultipleSubKeys(5)">
+              <i class="fas fa-layer-group"></i> 批量生成5个
+            </button>
+            <button type="button" class="btn btn-outline" onclick="generateMultipleSubKeys(10)">
+              <i class="fas fa-layer-group"></i> 批量生成10个
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-key"></i> 子密钥列表</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="subkeySearch" placeholder="搜索Key名称..." style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.85rem;" oninput="filterSubKeys(this.value)">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Key名称</th>
+              <th>子密钥</th>
+              <th>售价</th>
+              <th>已用/上限</th>
+              <th>限速</th>
+              <th>过期时间</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="subkeysTableBody">
+            <tr><td colspan="8" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
   <!-- 订单管理 -->
   <div class="page" id="page-orders">
     <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:24px;">订单管理</h1>
@@ -821,6 +936,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadWithdrawals();
   loadTiers();
   loadWechatConfig();
+  loadSubKeys();
+  loadParentKeysAndUsers();
   
   // 表单提交
   document.getElementById('packageForm').addEventListener('submit', handlePackageSubmit);
@@ -1563,6 +1680,198 @@ async function loadWithdrawals() {
     loadWithdrawalsForPayment();
   }
 }
+
+// ==================== 子密钥管理 ====================
+
+let allSubKeys = [];
+
+async function loadSubKeys() {
+  try {
+    const res = await fetch('/api/admin/sub-keys');
+    const json = await res.json();
+    if (json.code === 0) {
+      allSubKeys = json.data || [];
+      renderSubKeys(allSubKeys);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function loadParentKeysAndUsers() {
+  try {
+    const [keysRes, usersRes] = await Promise.all([
+      fetch('/api/admin/api-keys'),
+      fetch('/api/admin/users')
+    ]);
+    
+    const keysJson = await keysRes.json();
+    const usersJson = await usersRes.json();
+    
+    // 填充上游Key下拉
+    const parentKeySelect = document.getElementById('parentKeySelect');
+    if (keysJson.code === 0 && keysJson.data) {
+      parentKeySelect.innerHTML = '<option value="">请选择上游Key</option>' + 
+        keysJson.data.map(k => `<option value="${k.id}">${k.name} (${k.provider})</option>`).join('');
+    }
+    
+    // 填充用户下拉
+    const userSelect = document.getElementById('userSelect');
+    if (usersJson.code === 0 && usersJson.data) {
+      userSelect.innerHTML = '<option value="">不指定用户（公开）</option>' + 
+        usersJson.data.map(u => `<option value="${u.id}">${u.username} (${u.email})</option>`).join('');
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderSubKeys(data) {
+  const tbody = document.getElementById('subkeysTableBody');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-secondary);">暂无子密钥</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${k.key_name}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code style="background:var(--bg);padding:4px 8px;border-radius:4px;font-size:0.8rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;">${k.sub_api_key}</code>
+          <button class="btn btn-sm" onclick="copyToClipboard('${k.sub_api_key}')" title="复制"><i class="fas fa-copy"></i></button>
+        </div>
+      </td>
+      <td>¥${parseFloat(k.price_per_1k || 0).toFixed(4)}/千</td>
+      <td>
+        <div style="text-align:center;">
+          <div>${(k.total_calls || 0).toLocaleString()}</div>
+          <div style="font-size:0.75rem;color:var(--text-secondary);">/ ${(k.daily_limit || 0).toLocaleString()}/日</div>
+        </div>
+      </td>
+      <td>${k.rate_limit || 60}/分</td>
+      <td>${k.expires_at ? new Date(k.expires_at).toLocaleDateString() : '永不过期'}</td>
+      <td>
+        <span class="badge ${k.is_active ? 'badge-success' : 'badge-danger'}">
+          ${k.is_active ? '启用' : '禁用'}
+        </span>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="toggleSubKey('${k.id}', ${!k.is_active})" title="${k.is_active ? '禁用' : '启用'}">
+          <i class="fas fa-${k.is_active ? 'ban' : 'check'}"></i>
+        </button>
+        <button class="btn btn-sm btn-outline" onclick="resetSubKeyUsage('${k.id}')" title="重置用量">
+          <i class="fas fa-redo"></i>
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deleteSubKey('${k.id}')" title="删除">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterSubKeys(query) {
+  if (!query) {
+    renderSubKeys(allSubKeys);
+    return;
+  }
+  const filtered = allSubKeys.filter(k => 
+    k.key_name.toLowerCase().includes(query.toLowerCase()) ||
+    k.sub_api_key.toLowerCase().includes(query.toLowerCase())
+  );
+  renderSubKeys(filtered);
+}
+
+async function generateSubKeys(count = 1) {
+  const form = document.getElementById('subkeyForm');
+  const formData = new FormData(form);
+  
+  const parent_key_id = formData.get('parent_key_id');
+  if (!parent_key_id) {
+    alert('请选择上游Key');
+    return;
+  }
+  
+  const data = {
+    parent_key_id,
+    key_name: formData.get('key_name') || `子Key-${Date.now()}`,
+    price_per_1k: parseFloat(formData.get('price_per_1k') || 0.001),
+    rate_limit: parseInt(formData.get('rate_limit') || 60),
+    daily_limit: parseInt(formData.get('daily_limit') || 10000),
+    monthly_limit: parseInt(formData.get('monthly_limit') || 100000),
+    expires_at: formData.get('expires_at') || null,
+    user_id: formData.get('user_id') || null,
+    count: count
+  };
+  
+  try {
+    const res = await fetch('/api/admin/sub-keys/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    
+    if (json.code === 0) {
+      alert(`成功生成 ${count} 个子密钥！\n\n子密钥：${json.data.map(k => k.sub_api_key).join('\n')}\n\n请妥善保存，这些密钥不会再显示！`);
+      loadSubKeys();
+      form.reset();
+    } else {
+      alert(json.msg || '生成失败');
+    }
+  } catch(e) {
+    alert('生成失败');
+  }
+}
+
+function generateMultipleSubKeys(count) {
+  generateSubKeys(count);
+}
+
+async function toggleSubKey(id, enable) {
+  try {
+    await fetch(`/api/admin/sub-keys/${id}/toggle`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ is_active: enable })
+    });
+    loadSubKeys();
+  } catch(e) {
+    alert('操作失败');
+  }
+}
+
+async function resetSubKeyUsage(id) {
+  if (!confirm('确认重置该密钥的用量统计？')) return;
+  try {
+    await fetch(`/api/admin/sub-keys/${id}/reset`, { method: 'POST' });
+    loadSubKeys();
+  } catch(e) {
+    alert('操作失败');
+  }
+}
+
+async function deleteSubKey(id) {
+  if (!confirm('确认删除该子密钥？删除后不可恢复！')) return;
+  try {
+    await fetch(`/api/admin/sub-keys/${id}`, { method: 'DELETE' });
+    loadSubKeys();
+  } catch(e) {
+    alert('删除失败');
+  }
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('已复制到剪贴板');
+  }).catch(() => {
+    prompt('复制以下内容：', text);
+  });
+}
+
+// 在 DOMContentLoaded 中初始化子密钥相关
+const originalInit = window.checkAdmin;
 </script>
 </body>
 </html>

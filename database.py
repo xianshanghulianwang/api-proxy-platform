@@ -219,6 +219,30 @@ def init_db():
         )
     """)
 
+    # ==================== 子API密钥表（从主密钥派生）====================
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS sub_api_keys (
+            id TEXT PRIMARY KEY,
+            parent_key_id TEXT NOT NULL,
+            user_id TEXT,
+            key_name TEXT NOT NULL,
+            sub_api_key TEXT UNIQUE NOT NULL,
+            secret_key TEXT NOT NULL,
+            price_per_1k REAL DEFAULT 0.001,
+            rate_limit INTEGER DEFAULT 60,
+            daily_limit INTEGER DEFAULT 10000,
+            monthly_limit INTEGER DEFAULT 100000,
+            expires_at TEXT,
+            is_active INTEGER DEFAULT 1,
+            total_calls INTEGER DEFAULT 0,
+            total_cost REAL DEFAULT 0,
+            created_at TEXT,
+            last_used_at TEXT,
+            FOREIGN KEY(parent_key_id) REFERENCES api_keys(id),
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    """)
+
     # ==================== 用量记录表 ====================
     cur.execute("""
         CREATE TABLE IF NOT EXISTS usage_logs (

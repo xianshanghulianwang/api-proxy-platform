@@ -1433,6 +1433,130 @@ async def api_admin_delete_api_key(key_id: str, request: Request):
     
     return JSONResponse({"code": 0, "msg": "API Key已删除"})
 
+# ==================== API: 子密钥管理 ====================
+
+@app.get("/api/admin/sub-keys")
+async def api_admin_list_sub_keys(request: Request):
+    """获取所有子密钥"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT s.*, p.name as parent_name, p.provider,
+               (SELECT username FROM users WHERE id = s.user_id) as assigned_user
+        FROM sub_api_keys s
+        JOIN api_keys p ON s.parent_key_id = p.id
+        ORDER BY s.created_at DESC
+    """)
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return JSONResponse({"code": 0, "data": rows})
+
+@app.post("/api/admin/sub-keys/generate")
+async def api_admin_generate_sub_keys(request: Request):
+    """生成子密钥"""
+    require_admin(request)
+    data = await request.json()
+    
+    parent_key_id = data.get("parent_key_id")
+    count = int(data.get("count", 1))
+    
+    if not parent_key_id:
+        return JSONResponse({"code": 1, "msg": "请选择上游Key"})
+    
+    # 验证上游Key存在
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM api_keys WHERE id=?", (parent_key_id,))
+    parent_key = cur.fetchone()
+    if not parent_key:
+        conn.close()
+        return JSONResponse({"code": 1, "msg": "上游Key不存在"})
+    
+    now = datetime.now().isoformat()
+    generated_keys = []
+    
+    for i in range(count):
+        key_id = str(uuid.uuid4())
+        # 生成格式：sk-sub- + 32位随机字符串
+        sub_api_key = "sk-sub-" + hashlib.sha256(f"{key_id}{now}{i}".encode()).hexdigest()[:32]
+        secret_key = hashlib.sha256(f"{key_id}{now}{i}secret".encode()).hexdigest()[:24]
+        
+        key_name = data.get("key_name", "子密钥")
+        if count > 1:
+            key_name = f"{key_name}-{i+1}"
+        
+        cur.execute("""
+            INSERT INTO sub_api_keys 
+            (id, parent_key_id, user_id, key_name, sub_api_key, secret_key, 
+             price_per_1k, rate_limit, daily_limit, monthly_limit, expires_at, is_active, created_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            key_id, parent_key_id, data.get("user_id"),
+            key_name, sub_api_key, secret_key,
+            float(data.get("price_per_1k", 0.001)),
+            int(data.get("rate_limit", 60)),
+            int(data.get("daily_limit", 10000)),
+            int(data.get("monthly_limit", 100000)),
+            data.get("expires_at"), 1, now
+        ))
+        generated_keys.append({
+            "id": key_id,
+            "key_name": key_name,
+            "sub_api_key": sub_api_key,
+            "secret_key": secret_key
+        })
+    
+    conn.commit()
+    conn.close()
+    
+    logger.info(f"[子密钥生成] 生成了 {count} 个子密钥，父Key: {parent_key_id}")
+    return JSONResponse({"code": 0, "msg": f"成功生成{count}个子密钥", "data": generated_keys})
+
+@app.post("/api/admin/sub-keys/{sub_key_id}/toggle")
+async def api_admin_toggle_sub_key(sub_key_id: str, request: Request):
+    """启用/禁用子密钥"""
+    require_admin(request)
+    data = await request.json()
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE sub_api_keys SET is_active=? WHERE id=?", 
+                (1 if data.get("is_active") else 0, sub_key_id))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "操作成功"})
+
+@app.post("/api/admin/sub-keys/{sub_key_id}/reset")
+async def api_admin_reset_sub_key_usage(sub_key_id: str, request: Request):
+    """重置子密钥用量"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE sub_api_keys SET total_calls=0, total_cost=0, last_used_at=? WHERE id=?",
+                (datetime.now().isoformat(), sub_key_id))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "用量已重置"})
+
+@app.delete("/api/admin/sub-keys/{sub_key_id}")
+async def api_admin_delete_sub_key(sub_key_id: str, request: Request):
+    """删除子密钥"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM sub_api_keys WHERE id=?", (sub_key_id,))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "子密钥已删除"})
+
 @app.delete("/api/admin/tiers/{tier_id}")
 async def api_admin_delete_tier(tier_id: str, request: Request):
     """删除代理等级"""
