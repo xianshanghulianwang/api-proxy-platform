@@ -239,6 +239,10 @@ tr:last-child td { border-bottom: none; }
       <i class="fas fa-cog"></i>
       <span>系统设置</span>
     </div>
+    <div class="sidebar-item" onclick="showPage('payments')">
+      <i class="fab fa-weixin" style="color:#07c160;"></i>
+      <span>收款设置</span>
+    </div>
   </div>
   
   <div class="sidebar-divider"></div>
@@ -716,6 +720,85 @@ tr:last-child td { border-bottom: none; }
       </div>
     </div>
   </div>
+
+  <!-- 收款设置 -->
+  <div class="page" id="page-payments">
+    <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:24px;">收款设置</h1>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="fab fa-weixin" style="color:#07c160;"></i> 微信收款配置</div>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:20px;">
+          <div class="form-item">
+            <label>微信收款二维码图片URL</label>
+            <input type="text" id="wechat-qrcode-url" placeholder="https://example.com/wechat-qr.png">
+            <small style="color:var(--text-secondary);font-size:0.78rem;">上传收款二维码图片，将URL填入此处</small>
+          </div>
+          <div class="form-item">
+            <label>收款说明</label>
+            <input type="text" id="wechat-desc" placeholder="终点平台收款" value="终点API平台">
+          </div>
+        </div>
+        
+        <div style="background:var(--bg);border-radius:12px;padding:20px;margin-bottom:20px;">
+          <div style="font-weight:600;margin-bottom:12px;">当前收款码预览</div>
+          <div style="display:flex;align-items:center;gap:20px;">
+            <div id="qrcodePreview" style="width:120px;height:120px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:2rem;">
+              <i class="fas fa-qrcode"></i>
+            </div>
+            <div>
+              <div style="font-size:0.9rem;color:var(--text-secondary);">建议图片尺寸：200×200像素</div>
+              <div style="font-size:0.85rem;color:var(--danger);margin-top:4px;">请使用微信收款码，不要使用付款码！</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-item" style="margin-bottom:20px;">
+          <label>收款码图片上传</label>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <input type="file" id="qrcodeFile" accept="image/*" style="display:none;" onchange="handleQrcodeUpload(this)">
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('qrcodeFile').click()">
+              <i class="fas fa-upload"></i> 上传收款码
+            </button>
+            <span id="uploadStatus" style="font-size:0.85rem;color:var(--text-secondary);"></span>
+          </div>
+        </div>
+        
+        <button class="btn btn-primary" onclick="saveWechatConfig()">
+          <i class="fas fa-save"></i> 保存微信收款配置
+        </button>
+        <div id="wechatMsg" class="msg" style="margin-top:12px;"></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-history"></i> 最近的提现申请</div>
+        <button class="btn btn-primary btn-sm" onclick="loadWithdrawals()"><i class="fas fa-sync-alt"></i> 刷新</button>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>申请时间</th>
+                <th>代理名称</th>
+                <th>金额</th>
+                <th>微信号</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="withdrawalsList">
+              <tr><td colspan="6" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -737,6 +820,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadCommissions();
   loadWithdrawals();
   loadTiers();
+  loadWechatConfig();
   
   // 表单提交
   document.getElementById('packageForm').addEventListener('submit', handlePackageSubmit);
@@ -1344,6 +1428,140 @@ function exportUsers() { alert('导出用户功能'); }
 async function logout() {
   await fetch('/api/auth/logout', { method: 'POST' });
   window.location.href = '/login';
+}
+
+// ==================== 收款设置 ====================
+
+async function loadWechatConfig() {
+  try {
+    const res = await fetch('/api/admin/config/wechat');
+    const json = await res.json();
+    if (json.code === 0 && json.data) {
+      document.getElementById('wechat-qrcode-url').value = json.data.wechat_qrcode || '';
+      document.getElementById('wechat-desc').value = json.data.wechat_desc || '';
+      
+      const preview = document.getElementById('qrcodePreview');
+      if (json.data.wechat_qrcode) {
+        preview.innerHTML = '<img src="' + json.data.wechat_qrcode + '" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">';
+      }
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function saveWechatConfig() {
+  const wechat_qrcode = document.getElementById('wechat-qrcode-url').value.trim();
+  const wechat_desc = document.getElementById('wechat-desc').value.trim();
+  
+  try {
+    const res = await fetch('/api/admin/config/wechat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ wechat_qrcode, wechat_desc })
+    });
+    const json = await res.json();
+    
+    const msg = document.getElementById('wechatMsg');
+    if (json.code === 0) {
+      msg.textContent = '✓ 保存成功！';
+      msg.className = 'msg badge-success';
+      msg.style.display = 'block';
+    } else {
+      msg.textContent = json.msg || '保存失败';
+      msg.className = 'msg badge-danger';
+      msg.style.display = 'block';
+    }
+    setTimeout(() => msg.style.display = 'none', 3000);
+  } catch(e) {
+    alert('保存失败');
+  }
+}
+
+function handleQrcodeUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  if (file.size > 2 * 1024 * 1024) {
+    alert('图片大小不能超过2MB');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // 这里需要先上传图片到服务器
+    // 暂时直接使用 base64 数据
+    document.getElementById('wechat-qrcode-url').value = e.target.result;
+    document.getElementById('qrcodePreview').innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">';
+    document.getElementById('uploadStatus').textContent = '已选择: ' + file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+// 加载提现列表（收款设置页面用）
+async function loadWithdrawalsForPayment() {
+  try {
+    const res = await fetch('/api/admin/withdrawals');
+    const json = await res.json();
+    if (json.code === 0) {
+      renderWithdrawalsList(json.data || []);
+    }
+  } catch(e) {}
+}
+
+function renderWithdrawalsList(data) {
+  const tbody = document.getElementById('withdrawalsList');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-secondary);">暂无提现申请</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = data.map(w => `
+    <tr>
+      <td>${new Date(w.created_at).toLocaleString('zh-CN')}</td>
+      <td>${w.agent_name || w.agent_id || '-'}</td>
+      <td style="font-weight:700;color:var(--success);">¥${parseFloat(w.amount).toFixed(2)}</td>
+      <td>${w.wechat_id || w.bank_account || '-'}</td>
+      <td><span class="badge ${getWithdrawStatusClass(w.status)}">${getWithdrawStatus(w.status)}</span></td>
+      <td>
+        ${w.status === 'pending' ? `
+          <button class="btn btn-sm btn-primary" onclick="approveWithdraw('${w.id}')" style="margin-right:4px;"><i class="fas fa-check"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="rejectWithdraw('${w.id}')"><i class="fas fa-times"></i></button>
+        ` : '-'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function approveWithdraw(id) {
+  if (!confirm('确认已打款？')) return;
+  try {
+    await fetch('/api/admin/withdrawals/' + id + '/approve', { method: 'POST' });
+    loadWithdrawalsForPayment();
+    loadWithdrawals();
+  } catch(e) {
+    alert('操作失败');
+  }
+}
+
+async function rejectWithdraw(id) {
+  if (!confirm('确认拒绝此提现申请？')) return;
+  try {
+    await fetch('/api/admin/withdrawals/' + id + '/reject', { method: 'POST' });
+    loadWithdrawalsForPayment();
+    loadWithdrawals();
+  } catch(e) {
+    alert('操作失败');
+  }
+}
+
+// 覆盖原有的 loadWithdrawals 以加载收款设置页面的列表
+const originalLoadWithdrawals = loadWithdrawals;
+async function loadWithdrawals() {
+  await originalLoadWithdrawals();
+  if (document.getElementById('page-payments').classList.contains('active')) {
+    loadWithdrawalsForPayment();
+  }
 }
 </script>
 </body>

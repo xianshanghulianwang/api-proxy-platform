@@ -135,6 +135,7 @@ def init_db():
             bank_name TEXT,
             bank_account TEXT,
             bank_holder TEXT,
+            wechat_id TEXT,
             status TEXT DEFAULT 'pending',
             admin_remark TEXT,
             created_at TEXT,

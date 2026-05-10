@@ -65,6 +65,14 @@ def get_config(key: str, default: str = "") -> str:
     conn.close()
     return row["value"] if row else default
 
+def set_config(key: str, value: str) -> None:
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("INSERT OR REPLACE INTO config (key, value, updated_at) VALUES (?, ?, ?)",
+                (key, value, datetime.now().isoformat()))
+    conn.commit()
+    conn.close()
+
 # ==================== 静态文件和模板 ====================
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -749,6 +757,7 @@ async def api_agent_withdraw(request: Request):
     bank_name = data.get("bank_name", "")
     bank_account = data.get("bank_account", "")
     bank_holder = data.get("bank_holder", "")
+    wechat_id = data.get("wechat_id", "")
     
     if amount < 100:
         return JSONResponse({"code": 1, "msg": "最低提现100元"})
@@ -770,9 +779,9 @@ async def api_agent_withdraw(request: Request):
     now = datetime.now().isoformat()
     
     cur.execute("""
-        INSERT INTO withdrawals (id, agent_id, amount, bank_name, bank_account, bank_holder, status, created_at)
-        VALUES (?,?,?,?,?,?,?,?)
-    """, (withdraw_id, agent["id"], amount, bank_name, bank_account, bank_holder, "pending", now))
+        INSERT INTO withdrawals (id, agent_id, amount, bank_name, bank_account, bank_holder, wechat_id, status, created_at)
+        VALUES (?,?,?,?,?,?,?,?,?)
+    """, (withdraw_id, agent["id"], amount, bank_name, bank_account, bank_holder, wechat_id, "pending", now))
     
     # 冻结余额
     cur.execute("UPDATE agents SET withdrawable_balance = withdrawable_balance - ? WHERE id=?", 
@@ -781,9 +790,9 @@ async def api_agent_withdraw(request: Request):
     conn.commit()
     conn.close()
     
-    logger.info(f"[提现申请] 代理{agent['id']}申请提现{amount}元")
+    logger.info(f"[提现申请] 代理{agent['id']}申请提现{amount}元到微信:{wechat_id}")
     
-    return JSONResponse({"code": 0, "msg": "提现申请已提交"})
+    return JSONResponse({"code": 0, "msg": "提现申请已提交", "data": {"withdraw_id": withdraw_id}})
 
 @app.get("/api/agent/withdrawals")
 async def api_agent_withdrawals(request: Request):
@@ -1275,15 +1284,16 @@ async def api_admin_withdrawals(request: Request):
     cur = conn.cursor()
     cur.execute("""
         SELECT w.*, a.user_id as agent_user_id,
-               (SELECT username FROM users WHERE id = a.user_id) as agent_username
+               (SELECT username FROM users WHERE id = a.user_id) as agent_name
         FROM withdrawals w
         JOIN agents a ON w.agent_id = a.id
         ORDER BY w.created_at DESC
+        LIMIT 50
     """)
     withdrawals = [dict(r) for r in cur.fetchall()]
     conn.close()
     
-    return JSONResponse({"code": 0, "withdrawals": withdrawals})
+    return JSONResponse({"code": 0, "data": withdrawals})
 
 @app.post("/api/admin/withdrawals/{withdraw_id}/approve")
 async def api_admin_approve_withdraw(withdraw_id: str, request: Request):
@@ -1292,7 +1302,7 @@ async def api_admin_approve_withdraw(withdraw_id: str, request: Request):
     
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("UPDATE withdrawals SET status='approved', updated_at=? WHERE id=?", 
+    cur.execute("UPDATE withdrawals SET status='approved', processed_at=? WHERE id=?", 
                 (datetime.now().isoformat(), withdraw_id))
     conn.commit()
     conn.close()
@@ -1314,7 +1324,7 @@ async def api_admin_reject_withdraw(withdraw_id: str, request: Request):
         cur.execute("UPDATE agents SET withdrawable_balance = withdrawable_balance + ? WHERE id=?",
                    (withdraw["amount"], withdraw["agent_id"]))
     
-    cur.execute("UPDATE withdrawals SET status='rejected', updated_at=? WHERE id=?",
+    cur.execute("UPDATE withdrawals SET status='rejected', processed_at=? WHERE id=?",
                 (datetime.now().isoformat(), withdraw_id))
     conn.commit()
     conn.close()
@@ -1435,6 +1445,54 @@ async def api_admin_delete_tier(tier_id: str, request: Request):
     conn.close()
     
     return JSONResponse({"code": 0, "msg": "等级已删除"})
+
+# ==================== API: 平台配置 ====================
+
+@app.get("/api/platform/config")
+async def api_platform_config(request: Request):
+    """获取平台配置（公开接口）"""
+    key = request.query_params.get("key", "")
+    if key:
+        value = get_config(key)
+        return JSONResponse({"code": 0, "data": {"key": key, "value": value}})
+    
+    # 返回所有配置
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT key, value FROM config")
+    rows = cur.fetchall()
+    conn.close()
+    
+    config = {row["key"]: row["value"] for row in rows}
+    return JSONResponse({"code": 0, "data": config})
+
+@app.get("/api/admin/config/wechat")
+async def api_admin_get_wechat_config(request: Request):
+    """获取微信收款配置"""
+    require_admin(request)
+    
+    wechat_qrcode = get_config("wechat_qrcode")
+    wechat_desc = get_config("wechat_desc")
+    
+    return JSONResponse({"code": 0, "data": {
+        "wechat_qrcode": wechat_qrcode,
+        "wechat_desc": wechat_desc
+    }})
+
+@app.post("/api/admin/config/wechat")
+async def api_admin_set_wechat_config(request: Request):
+    """保存微信收款配置"""
+    require_admin(request)
+    data = await request.json()
+    
+    wechat_qrcode = data.get("wechat_qrcode", "")
+    wechat_desc = data.get("wechat_desc", "")
+    
+    set_config("wechat_qrcode", wechat_qrcode)
+    set_config("wechat_desc", wechat_desc)
+    
+    logger.info(f"[微信收款配置] 已更新")
+    return JSONResponse({"code": 0, "msg": "保存成功"})
 
 # ==================== 健康检查 ====================
 

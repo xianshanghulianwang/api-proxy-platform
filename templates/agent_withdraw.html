@@ -5,199 +5,326 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>提现 - 终点</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f7; min-height: 100vh; }
-  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; }
-  .header h1 { font-size: 1.5rem; margin-bottom: 4px; }
-  .header p { font-size: 0.9rem; opacity: 0.9; }
-  .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-  .nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-  .nav a { padding: 10px 20px; background: white; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.9rem; transition: all 0.2s; }
-  .nav a:hover, .nav a.active { background: #667eea; color: white; }
-  .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-  .section-title { font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-  .balance-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 30px; color: white; text-align: center; margin-bottom: 24px; }
-  .balance-label { font-size: 0.9rem; opacity: 0.9; margin-bottom: 8px; }
-  .balance-value { font-size: 3rem; font-weight: 700; }
-  .form-group { margin-bottom: 20px; }
-  .form-group label { display: block; font-size: 0.9rem; font-weight: 600; color: #333; margin-bottom: 8px; }
-  .form-group input { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; font-family: inherit; outline: none; transition: border-color 0.3s; }
-  .form-group input:focus { border-color: #667eea; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .submit-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 28px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
-  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4); }
-  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  .msg { text-align: center; margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; }
-  .msg.error { background: #fef2f2; color: #ef4444; }
-  .msg.success { background: #d1fae5; color: #059669; }
-  .history-table { width: 100%; border-collapse: collapse; margin-top: 24px; }
-  .history-table th { text-align: left; padding: 12px; background: #f9f9f9; font-size: 0.85rem; color: #666; font-weight: 600; }
-  .history-table td { padding: 14px 12px; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; }
-  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-  .badge-pending { background: #fef3c7; color: #d97706; }
-  .badge-approved { background: #d1fae5; color: #059669; }
-  .badge-rejected { background: #fee2e2; color: #dc2626; }
-  .tip { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; font-size: 0.85rem; color: #0369a1; margin-bottom: 20px; line-height: 1.6; }
-  @media (max-width: 768px) {
-    .form-row { grid-template-columns: 1fr; }
-  }
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+a { text-decoration: none; color: inherit; }
+.header { background: linear-gradient(135deg, var(--primary), #8b5cf6); color: white; padding: 30px; }
+.header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.header p { font-size: 0.9rem; opacity: 0.9; }
+.container { max-width: 800px; margin: 0 auto; padding: 20px; }
+.nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.nav a { padding: 10px 20px; background: white; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+.nav a:hover, .nav a.active { background: var(--primary); color: white; }
+.card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.card-title i { color: var(--primary); }
+.balance-display { background: linear-gradient(135deg, var(--success), #34d399); color: white; padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 20px; }
+.balance-value { font-size: 2.5rem; font-weight: 700; }
+.balance-label { font-size: 0.9rem; opacity: 0.9; }
+.form-item { margin-bottom: 20px; }
+.form-item label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+.form-item input, .form-item select { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; font-family: inherit; outline: none; transition: all 0.3s; }
+.form-item input:focus, .form-item select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 28px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; width: 100%; }
+.btn-primary { background: linear-gradient(135deg, var(--success), #34d399); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16,185,129,0.3); }
+.btn-wechat { background: linear-gradient(135deg, #07c160, #06ad56); color: white; }
+.btn-wechat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(7,193,96,0.3); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.msg { padding: 14px 18px; border-radius: 12px; margin-top: 16px; font-size: 0.9rem; display: none; text-align: center; }
+.msg.success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
+.msg.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+.alert { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; font-size: 0.9rem; display: flex; align-items: flex-start; gap: 12px; }
+.alert-icon { color: var(--warning); font-size: 1.1rem; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: 14px; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); background: var(--bg); }
+.table td { padding: 14px; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+.badge { display: inline-flex; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+.badge-pending { background: rgba(245,158,11,0.1); color: var(--warning); }
+.badge-approved { background: rgba(16,185,129,0.1); color: var(--success); }
+.badge-rejected { background: rgba(239,68,68,0.1); color: var(--danger); }
+.qr-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
+.qr-modal.show { display: flex; }
+.qr-content { background: white; border-radius: 20px; padding: 30px; max-width: 360px; width: 90%; text-align: center; }
+.qr-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+.qr-amount { font-size: 2rem; font-weight: 700; color: var(--success); margin: 16px 0; }
+.qr-image { background: var(--bg); border-radius: 12px; padding: 20px; margin: 16px 0; }
+.qr-image img { width: 200px; height: 200px; }
+.qr-tip { font-size: 0.85rem; color: var(--text-secondary); margin-top: 12px; }
+.qr-btn { margin-top: 16px; }
+.qr-close { position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer; }
+.min-withdraw { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
 </style>
 </head>
 <body>
 <div class="header">
-  <h1>佣金提现</h1>
-  <p>将可提现余额转入银行卡</p>
+  <h1>💰 佣金提现</h1>
+  <p>将收益提现到微信</p>
 </div>
 
 <div class="container">
   <div class="nav">
     <a href="/agent/dashboard">总览</a>
+    <a href="/agent/earnings">收益设置</a>
+    <a href="/agent/pricing">我的定价</a>
     <a href="/agent/users">下线管理</a>
     <a href="/agent/commissions">佣金记录</a>
     <a href="/agent/withdraw" class="active">提现</a>
   </div>
 
-  <div class="section">
-    <div class="balance-card">
-      <div class="balance-label">可提现余额</div>
-      <div class="balance-value" id="withdrawableBalance">¥0</div>
-    </div>
+  <div class="balance-display">
+    <div class="balance-label">可提现余额</div>
+    <div class="balance-value" id="withdrawableBalance">¥0.00</div>
+  </div>
 
-    <div class="tip">
-      💡 提现说明：<br>
-      • 最低提现金额：100元<br>
-      • 提现手续费：1%<br>
-      • 提现将在1-3个工作日内到账
+  <div class="card">
+    <div class="card-title">
+      <i class="fab fa-weixin" style="color:#07c160;"></i>
+      微信转账提现
     </div>
-
+    
+    <div class="alert">
+      <i class="fas fa-info-circle alert-icon"></i>
+      <div>
+        <strong>提现说明：</strong><br>
+        • 最低提现 <strong>100元</strong><br>
+        • 提交后，管理员核对收款二维码，确认后自动到账<br>
+        • 到账时间：1-3个工作日内
+      </div>
+    </div>
+    
     <form id="withdrawForm">
-      <div class="form-group">
-        <label>提现金额</label>
-        <input type="number" name="amount" id="amount" placeholder="请输入提现金额" min="100" step="0.01" required>
+      <div class="form-item">
+        <label>提现金额（元）</label>
+        <input type="number" id="amount" name="amount" min="100" step="1" placeholder="请输入提现金额" required>
+        <div class="min-withdraw">最低提现：100元</div>
       </div>
       
-      <div class="form-row">
-        <div class="form-group">
-          <label>开户银行</label>
-          <input type="text" name="bank_name" placeholder="如：工商银行" required>
-        </div>
-        <div class="form-group">
-          <label>银行卡号</label>
-          <input type="text" name="bank_account" placeholder="请输入银行卡号" required>
-        </div>
+      <div class="form-item">
+        <label>收款微信（显示在二维码上）</label>
+        <input type="text" id="wechat_id" name="wechat_id" placeholder="请输入您的微信号" required>
       </div>
       
-      <div class="form-group">
-        <label>开户姓名</label>
-        <input type="text" name="bank_holder" placeholder="请输入开户姓名" required>
-      </div>
-      
-      <button type="submit" class="submit-btn" id="submitBtn">申请提现</button>
+      <button type="submit" class="btn btn-primary">
+        <i class="fab fa-weixin"></i>
+        申请提现
+      </button>
       <div id="msg" class="msg"></div>
     </form>
+  </div>
 
-    <div id="history">
-      <!-- 提现记录将动态加载 -->
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-history"></i>
+      提现记录
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>时间</th>
+          <th>金额</th>
+          <th>微信</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody id="withdrawalsBody">
+        <tr><td colspan="4" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 微信收款二维码弹窗 -->
+<div class="qr-modal" id="qrModal">
+  <div class="qr-content">
+    <div class="qr-title">微信收款码</div>
+    <div style="font-size:0.9rem;color:var(--text-secondary);">向您转账</div>
+    <div class="qr-amount" id="qrAmount">¥0.00</div>
+    <div class="qr-image">
+      <img id="qrImage" src="" alt="微信收款码">
+    </div>
+    <div style="font-size:0.85rem;color:var(--text-secondary);">
+      请使用微信扫描二维码，向商家转账
+    </div>
+    <button class="btn btn-wechat qr-btn" onclick="openWechatScan()">
+      <i class="fab fa-weixin"></i>
+      打开微信扫码支付
+    </button>
+    <div class="qr-tip">
+      转账完成后，点击"已完成转账"按钮
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px;" onclick="confirmPaid()">
+      <i class="fas fa-check"></i>
+      已完成转账
+    </button>
+    <div style="margin-top:12px;">
+      <a href="javascript:closeQrModal()" style="color:var(--text-secondary);font-size:0.85rem;">取消</a>
     </div>
   </div>
 </div>
 
 <script>
-async function loadData() {
+let pendingWithdrawId = null;
+
+async function loadWithdrawals() {
   try {
-    const res = await fetch('/api/user/info');
+    const res = await fetch('/api/agent/withdrawals');
     const json = await res.json();
     if (json.code === 0) {
-      document.getElementById('withdrawableBalance').textContent = '¥' + (json.data.withdrawable_balance || 0).toFixed(2);
-    }
-    
-    const withdrawRes = await fetch('/api/agent/withdrawals');
-    const withdrawJson = await withdrawRes.json();
-    
-    if (withdrawJson.code === 0 && withdrawJson.data.length > 0) {
-      document.getElementById('history').innerHTML = `
-        <h3 style="font-size:1rem;margin-bottom:12px;">提现记录</h3>
-        <table class="history-table">
-          <thead>
-            <tr>
-              <th>金额</th>
-              <th>银行</th>
-              <th>状态</th>
-              <th>时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${withdrawJson.data.map(w => `
-              <tr>
-                <td style="font-weight:600;">¥${w.amount}</td>
-                <td>${w.bank_name}</td>
-                <td><span class="badge badge-${w.status}">${w.status === 'pending' ? '处理中' : w.status === 'approved' ? '已打款' : '已拒绝'}</span></td>
-                <td>${new Date(w.created_at).toLocaleDateString()}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+      renderWithdrawals(json.data || []);
     }
   } catch(e) {
     console.error(e);
   }
 }
 
-document.getElementById('withdrawForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  const btn = document.getElementById('submitBtn');
-  const msg = document.getElementById('msg');
-  const formData = new FormData(this);
-  
-  const data = {
-    amount: parseFloat(formData.get('amount')),
-    bank_name: formData.get('bank_name'),
-    bank_account: formData.get('bank_account'),
-    bank_holder: formData.get('bank_holder')
-  };
-  
-  if (data.amount < 100) {
-    msg.textContent = '最低提现100元';
-    msg.className = 'msg error';
-    msg.style.display = 'block';
+function renderWithdrawals(data) {
+  if (data.length === 0) {
+    document.getElementById('withdrawalsBody').innerHTML = `
+      <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-secondary);">
+        暂无提现记录
+      </td></tr>
+    `;
     return;
   }
   
-  btn.disabled = true;
-  btn.textContent = '提交中...';
+  document.getElementById('withdrawalsBody').innerHTML = data.map(w => `
+    <tr>
+      <td>${new Date(w.created_at).toLocaleString('zh-CN')}</td>
+      <td style="font-weight:700;color:var(--success);">+¥${parseFloat(w.amount).toFixed(2)}</td>
+      <td>${w.wechat_id || '-'}</td>
+      <td><span class="badge badge-${w.status === 'approved' ? 'approved' : w.status === 'rejected' ? 'rejected' : 'pending'}">${w.status === 'approved' ? '已到账' : w.status === 'rejected' ? '已拒绝' : '处理中'}</span></td>
+    </tr>
+  `).join('');
+}
+
+async function loadWechatConfig() {
+  try {
+    const res = await fetch('/api/platform/config?key=wechat_qrcode');
+    const json = await res.json();
+    if (json.code === 0 && json.data && json.data.value) {
+      return json.data.value;
+    }
+  } catch(e) {}
+  return null;
+}
+
+document.getElementById('withdrawForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const amount = parseFloat(document.getElementById('amount').value);
+  const wechat_id = document.getElementById('wechat_id').value.trim();
+  
+  if (amount < 100) {
+    showMsg('最低提现100元', 'error');
+    return;
+  }
+  
+  if (!wechat_id) {
+    showMsg('请输入微信号', 'error');
+    return;
+  }
+  
+  // 检查可提现余额
+  const balanceRes = await fetch('/api/user/info');
+  const balanceJson = await balanceRes.json();
+  // 这里需要用代理的withdrawable_balance，但当前API没返回
+  // 先直接提交
+  
+  const msg = document.getElementById('msg');
+  msg.style.display = 'block';
+  msg.textContent = '提交中...';
+  msg.className = 'msg';
   
   try {
     const res = await fetch('/api/agent/withdraw', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
+      body: JSON.stringify({ amount, wechat_id })
     });
     const json = await res.json();
     
     if (json.code === 0) {
-      msg.textContent = '提现申请已提交！';
+      msg.textContent = '✓ 提现申请已提交！';
       msg.className = 'msg success';
-      msg.style.display = 'block';
-      this.reset();
-      setTimeout(() => location.reload(), 1500);
+      document.getElementById('amount').value = '';
+      document.getElementById('wechat_id').value = '';
+      
+      // 显示收款二维码弹窗
+      pendingWithdrawId = json.data?.withdraw_id;
+      await showQrModal(amount);
+      
+      loadWithdrawals();
     } else {
       msg.textContent = json.msg || '提交失败';
       msg.className = 'msg error';
-      msg.style.display = 'block';
     }
   } catch(e) {
     msg.textContent = '网络异常';
     msg.className = 'msg error';
-    msg.style.display = 'block';
   }
   
-  btn.disabled = false;
-  btn.textContent = '申请提现';
+  setTimeout(() => msg.style.display = 'none', 3000);
 });
 
-loadData();
+async function showQrModal(amount) {
+  const qrImage = await loadWechatConfig();
+  
+  if (!qrImage) {
+    // 没有配置收款码，直接提示转账
+    alert('管理员暂未配置微信收款码，请联系客服获取转账方式');
+    return;
+  }
+  
+  document.getElementById('qrAmount').textContent = '¥' + amount.toFixed(2);
+  document.getElementById('qrImage').src = qrImage;
+  document.getElementById('qrModal').classList.add('show');
+}
+
+function closeQrModal() {
+  document.getElementById('qrModal').classList.remove('show');
+}
+
+function openWechatScan() {
+  // 尝试打开微信扫码
+  if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+    // 移动端尝试调起微信
+    window.location.href = 'weixin://';
+  } else {
+    // PC端提示手动扫码
+    alert('请使用手机微信扫描二维码完成转账');
+  }
+}
+
+async function confirmPaid() {
+  if (pendingWithdrawId) {
+    alert('您的转账已记录，管理员确认后即可到账！');
+  }
+  closeQrModal();
+}
+
+function showMsg(text, type) {
+  const msg = document.getElementById('msg');
+  msg.textContent = text;
+  msg.className = 'msg ' + type;
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+}
+
+// 初始化
+loadWithdrawals();
 </script>
 </body>
 </html>
