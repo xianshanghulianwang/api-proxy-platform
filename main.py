@@ -221,6 +221,49 @@ async def agent_withdraw_page(request: Request):
         "withdrawals": withdrawals
     }, request)
 
+@app.get("/agent/earnings")
+async def agent_earnings(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse("/login")
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # 检查是否为代理
+    cur.execute("SELECT * FROM agents WHERE user_id = ? AND status = 'active'", (user["id"],))
+    agent = cur.fetchone()
+    if not agent:
+        return RedirectResponse("/agent/register")
+    
+    conn.close()
+    return Path(TEMPLATES_DIR / "agent_earnings.html").read_text()
+
+@app.get("/agent/pricing")
+async def agent_pricing(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse("/login")
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # 检查是否为代理
+    cur.execute("SELECT * FROM agents WHERE user_id = ? AND status = 'active'", (user["id"],))
+    agent = cur.fetchone()
+    if not agent:
+        return RedirectResponse("/agent/register")
+    
+    conn.close()
+    return Path(TEMPLATES_DIR / "agent_pricing.html").read_text()
+
+@app.get("/usage")
+async def usage_page(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse("/login")
+    return Path(TEMPLATES_DIR / "usage.html").read_text()
+
 # ==================== 管理员页面 ====================
 
 @app.get("/admin")
@@ -400,9 +443,96 @@ async def api_user_info(request: Request):
         "user_type": row["user_type"],
         "is_agent": agent is not None,
         "agent_id": agent["id"] if agent else None,
+        "tier_id": agent["tier_id"] if agent else None,
         "referral_code": agent["referral_code"] if agent else None,
         "created_at": row["created_at"]
     }})
+
+# ==================== API: 用户用量统计 ====================
+
+@app.get("/api/user/usage_stats")
+async def api_user_usage_stats(request: Request):
+    """获取用户用量统计"""
+    user = require_auth(request)
+    
+    filter_type = request.query_params.get("filter", "7d")
+    now = datetime.now()
+    
+    if filter_type == "today":
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif filter_type == "7d":
+        start_date = now - timedelta(days=7)
+    elif filter_type == "30d":
+        start_date = now - timedelta(days=30)
+    else:
+        start_date = datetime(2020, 1, 1)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        SELECT COALESCE(SUM(input_tokens), 0) as input_tokens,
+               COALESCE(SUM(output_tokens), 0) as output_tokens,
+               COALESCE(SUM(cost), 0) as total_cost,
+               COUNT(*) as total_calls
+        FROM usage_logs
+        WHERE user_id = ? AND called_at >= ?
+    """, (user["user_id"], start_date.isoformat()))
+    
+    row = cur.fetchone()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "data": {
+        "input_tokens": row["input_tokens"] or 0,
+        "output_tokens": row["output_tokens"] or 0,
+        "total_cost": row["total_cost"] or 0,
+        "total_calls": row["total_calls"] or 0
+    }})
+
+@app.get("/api/user/usage_list")
+async def api_user_usage_list(request: Request):
+    """获取用户用量明细"""
+    user = require_auth(request)
+    
+    filter_type = request.query_params.get("filter", "7d")
+    page = int(request.query_params.get("page", 1))
+    page_size = int(request.query_params.get("page_size", 20))
+    offset = (page - 1) * page_size
+    
+    now = datetime.now()
+    if filter_type == "today":
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif filter_type == "7d":
+        start_date = now - timedelta(days=7)
+    elif filter_type == "30d":
+        start_date = now - timedelta(days=30)
+    else:
+        start_date = datetime(2020, 1, 1)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # 获取总数
+    cur.execute("""
+        SELECT COUNT(*) as total
+        FROM usage_logs
+        WHERE user_id = ? AND called_at >= ?
+    """, (user["user_id"], start_date.isoformat()))
+    
+    total = cur.fetchone()["total"]
+    
+    # 获取列表
+    cur.execute("""
+        SELECT * FROM usage_logs
+        WHERE user_id = ? AND called_at >= ?
+        ORDER BY called_at DESC
+        LIMIT ? OFFSET ?
+    """, (user["user_id"], start_date.isoformat(), page_size, offset))
+    
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return JSONResponse({"code": 0, "data": rows, "total": total, "page": page, "page_size": page_size})
 
 # ==================== API: 套餐 ====================
 
@@ -674,6 +804,51 @@ async def api_agent_withdrawals(request: Request):
     conn.close()
     
     return JSONResponse({"code": 0, "data": withdrawals})
+
+# ==================== API: 代理加价率 ====================
+
+@app.get("/api/agent/markup")
+async def api_get_markup(request: Request):
+    """获取代理加价率"""
+    user = require_auth(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM agents WHERE user_id=? AND status='active'", (user["user_id"],))
+    agent = cur.fetchone()
+    
+    if not agent:
+        conn.close()
+        return JSONResponse({"code": 1, "msg": "不是代理"})
+    
+    conn.close()
+    return JSONResponse({"code": 0, "data": {"markup_rate": agent.get("markup_rate", 1.5)}})
+
+@app.post("/api/agent/markup")
+async def api_set_markup(request: Request):
+    """设置代理加价率"""
+    user = require_auth(request)
+    data = await request.json()
+    
+    markup_rate = float(data.get("markup_rate", 1.5))
+    if markup_rate < 1.0 or markup_rate > 5.0:
+        return JSONResponse({"code": 1, "msg": "加价率必须在1.0-5.0之间"})
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM agents WHERE user_id=? AND status='active'", (user["user_id"],))
+    agent = cur.fetchone()
+    
+    if not agent:
+        conn.close()
+        return JSONResponse({"code": 1, "msg": "不是代理"})
+    
+    cur.execute("UPDATE agents SET markup_rate = ? WHERE id = ?", (markup_rate, agent["id"]))
+    conn.commit()
+    conn.close()
+    
+    logger.info(f"[代理加价率] 代理{agent['id']}设置加价率为{markup_rate}")
+    return JSONResponse({"code": 0, "msg": "设置成功", "data": {"markup_rate": markup_rate}})
 
 # ==================== API: 订单 ====================
 

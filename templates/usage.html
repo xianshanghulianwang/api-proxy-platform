@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的用量 - 终点</title>
+<style>
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+a { text-decoration: none; color: inherit; }
+.header { background: linear-gradient(135deg, var(--primary), #8b5cf6); color: white; padding: 30px; }
+.header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.header p { font-size: 0.9rem; opacity: 0.9; }
+.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+.nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.nav a { padding: 10px 20px; background: white; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+.nav a:hover { background: var(--primary); color: white; }
+.nav a.active { background: var(--primary); color: white; }
+.card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.card-title i { color: var(--primary); }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: linear-gradient(135deg, var(--primary), #8b5cf6); color: white; padding: 20px; border-radius: 16px; text-align: center; }
+.stat-card.green { background: linear-gradient(135deg, var(--success), #34d399); }
+.stat-card.orange { background: linear-gradient(135deg, var(--warning), #fbbf24); }
+.stat-card.red { background: linear-gradient(135deg, var(--danger), #f87171); }
+.stat-value { font-size: 1.8rem; font-weight: 700; }
+.stat-label { font-size: 0.85rem; opacity: 0.9; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: 14px; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); background: var(--bg); }
+.table td { padding: 14px; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+.table tr:hover td { background: #f8fafc; }
+.badge { display: inline-flex; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+.badge-primary { background: rgba(99,102,241,0.1); color: var(--primary); }
+.badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
+.empty { text-align: center; padding: 60px; color: var(--text-secondary); }
+.empty-icon { font-size: 3rem; margin-bottom: 16px; }
+.chart-container { height: 300px; background: var(--bg); border-radius: 12px; padding: 20px; margin-top: 20px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); }
+.date-filter { display: flex; gap: 8px; margin-bottom: 20px; }
+.date-btn { padding: 8px 16px; background: var(--bg); border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; }
+.date-btn.active { background: var(--primary); color: white; }
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>我的用量</h1>
+  <p>查看您的 API 调用统计</p>
+</div>
+
+<div class="container">
+  <div class="nav">
+    <a href="/dashboard">控制台</a>
+    <a href="/usage" class="active">我的用量</a>
+    <a href="/orders">我的订单</a>
+    <a href="/pricing">购买套餐</a>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-value" id="totalCalls">0</div>
+      <div class="stat-label">总调用次数</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-value" id="inputTokens">0</div>
+      <div class="stat-label">输入 Tokens</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-value" id="outputTokens">0</div>
+      <div class="stat-label">输出 Tokens</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-value" id="totalCost">¥0</div>
+      <div class="stat-label">累计消费</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-chart-line"></i>
+      调用趋势
+    </div>
+    <div class="date-filter">
+      <button class="date-btn" onclick="filterByDate('today')">今天</button>
+      <button class="date-btn active" onclick="filterByDate('7d')">近7天</button>
+      <button class="date-btn" onclick="filterByDate('30d')">近30天</button>
+      <button class="date-btn" onclick="filterByDate('all')">全部</button>
+    </div>
+    <div class="chart-container" id="chartPlaceholder">
+      <span>📊 用量图表（可集成 ECharts）</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-list"></i>
+      调用明细
+    </div>
+    <div class="table-wrap">
+      <table class="table" id="usageTable">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>模型</th>
+            <th>输入 Tokens</th>
+            <th>输出 Tokens</th>
+            <th>费用</th>
+          </tr>
+        </thead>
+        <tbody id="usageTableBody">
+          <tr><td colspan="5" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="pagination" style="display:flex;justify-content:center;gap:8px;margin-top:20px;"></div>
+  </div>
+</div>
+
+<script>
+let currentFilter = '7d';
+let page = 1;
+const pageSize = 20;
+
+async function loadUsageStats() {
+  try {
+    const res = await fetch(`/api/user/usage_stats?filter=${currentFilter}`);
+    const json = await res.json();
+    if (json.code === 0) {
+      const d = json.data;
+      document.getElementById('totalCalls').textContent = d.total_calls || 0;
+      document.getElementById('inputTokens').textContent = formatNumber(d.input_tokens || 0);
+      document.getElementById('outputTokens').textContent = formatNumber(d.output_tokens || 0);
+      document.getElementById('totalCost').textContent = '¥' + (d.total_cost || 0).toFixed(4);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function loadUsageList() {
+  try {
+    const res = await fetch(`/api/user/usage_list?filter=${currentFilter}&page=${page}&page_size=${pageSize}`);
+    const json = await res.json();
+    if (json.code === 0) {
+      renderUsageList(json.data || []);
+      renderPagination(json.total || 0);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderUsageList(data) {
+  if (data.length === 0) {
+    document.getElementById('usageTableBody').innerHTML = `
+      <tr>
+        <td colspan="5">
+          <div class="empty">
+            <div class="empty-icon">📊</div>
+            <p>暂无调用记录</p>
+            <p style="font-size:0.9rem;margin-top:8px;">开始使用 API 后，这里会显示您的调用明细</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  document.getElementById('usageTableBody').innerHTML = data.map(item => `
+    <tr>
+      <td>${new Date(item.called_at).toLocaleString('zh-CN')}</td>
+      <td><span class="badge badge-primary">${item.model || '-'}</span></td>
+      <td>${formatNumber(item.input_tokens)}</td>
+      <td>${formatNumber(item.output_tokens)}</td>
+      <td style="font-weight:600;color:var(--danger);">-¥${item.cost.toFixed(4)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderPagination(total) {
+  const totalPages = Math.ceil(total / pageSize);
+  const container = document.getElementById('pagination');
+  
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  let html = '';
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="date-btn ${i === page ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  container.innerHTML = html;
+}
+
+function goPage(p) {
+  page = p;
+  loadUsageList();
+}
+
+function filterByDate(filter) {
+  currentFilter = filter;
+  page = 1;
+  document.querySelectorAll('.date-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  loadUsageStats();
+  loadUsageList();
+}
+
+function formatNumber(num) {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+  return num.toString();
+}
+
+// 初始化
+loadUsageStats();
+loadUsageList();
+</script>
+</body>
+</html>

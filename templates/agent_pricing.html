@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的定价 - 终点</title>
+<style>
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+a { text-decoration: none; color: inherit; }
+.header { background: linear-gradient(135deg, var(--primary), #8b5cf6); color: white; padding: 30px; }
+.header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.header p { font-size: 0.9rem; opacity: 0.9; }
+.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+.nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.nav a { padding: 10px 20px; background: white; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+.nav a:hover, .nav a.active { background: var(--primary); color: white; }
+.card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.card-title i { color: var(--primary); }
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
+.form-item { display: flex; flex-direction: column; gap: 6px; }
+.form-item.full { grid-column: span 2; }
+.form-item label { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.form-item label span { color: var(--text-secondary); font-weight: 400; }
+.form-item input, .form-item select { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-family: inherit; outline: none; transition: all 0.3s; }
+.form-item input:focus, .form-item select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.slider-container { margin-top: 8px; }
+.slider-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.slider-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+.slider-value small { font-size: 0.9rem; color: var(--text-secondary); font-weight: 400; }
+input[type="range"] { width: 100%; height: 8px; border-radius: 4px; background: var(--border); outline: none; -webkit-appearance: none; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--primary); cursor: pointer; box-shadow: 0 2px 8px rgba(99,102,241,0.4); }
+.slider-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+.btn-outline:hover { background: var(--primary); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+.msg { padding: 14px 18px; border-radius: 12px; margin-top: 16px; font-size: 0.9rem; display: none; }
+.msg.success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
+.msg.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+.alert { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; font-size: 0.9rem; display: flex; align-items: flex-start; gap: 12px; }
+.alert-icon { color: var(--primary); font-size: 1.1rem; }
+.alert-warning { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); }
+.alert-warning .alert-icon { color: var(--warning); }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: 14px; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); background: var(--bg); }
+.table td { padding: 14px; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+.table tr:hover td { background: #f8fafc; }
+.badge { display: inline-flex; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+.badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
+.badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
+.api-card { background: var(--bg); border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+.api-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.api-name { font-weight: 700; font-size: 1rem; }
+.api-provider { font-size: 0.85rem; color: var(--text-secondary); }
+.api-price { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+.price-calc { background: white; border-radius: 12px; padding: 20px; margin-top: 20px; }
+.price-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.price-row:last-child { border-bottom: none; font-weight: 700; font-size: 1.1rem; }
+.price-row span:first-child { color: var(--text-secondary); }
+.price-row span:last-child { color: var(--text); }
+.price-row.total span:last-child { color: var(--primary); }
+@media (max-width: 768px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-item.full { grid-column: span 1; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>💎 我的定价</h1>
+  <p>设置您的 API 加价率，管理上游密钥</p>
+</div>
+
+<div class="container">
+  <div class="nav">
+    <a href="/agent/dashboard">总览</a>
+    <a href="/agent/earnings">收益设置</a>
+    <a href="/agent/pricing" class="active">我的定价</a>
+    <a href="/agent/users">下线管理</a>
+    <a href="/agent/commissions">佣金记录</a>
+    <a href="/agent/withdraw">提现</a>
+  </div>
+
+  <div class="alert">
+    <i class="fas fa-lightbulb alert-icon"></i>
+    <div>
+      <strong>定价说明：</strong><br>
+      设置加价率后，您的下线用户调用 API 的价格 = 平台成本价 × 加价率。<br>
+      例如：平台成本价 0.001元/千tokens，加价率 1.5，则向下线收费 0.0015元/千tokens。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-percentage"></i>
+      全局加价率设置
+    </div>
+    <form id="pricingForm">
+      <div class="form-item" style="margin-bottom:20px;">
+        <label>加价率 <span>（平台成本价的倍数）</span></label>
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-value" id="markupValue">1.00<span>×</span></span>
+            <span style="color:var(--text-secondary);font-size:0.85rem;">建议设置 1.2~2.0</span>
+          </div>
+          <input type="range" id="markupSlider" min="1" max="3" step="0.05" value="1.5" oninput="updateMarkupValue()">
+          <div class="slider-labels">
+            <span>1.0× (同成本)</span>
+            <span>2.0×</span>
+            <span>3.0× (高价)</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="alert alert-warning" id="pricePreview" style="margin-top:20px;">
+        <i class="fas fa-calculator alert-icon"></i>
+        <div id="pricePreviewText">
+          <strong>价格预览：</strong><br>
+          设置加价率后，您的收益计算方式：
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:12px;margin-top:20px;">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 保存设置</button>
+        <button type="button" class="btn btn-outline" onclick="resetToDefault()"><i class="fas fa-undo"></i> 恢复默认</button>
+      </div>
+      <div id="msg" class="msg"></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-key"></i>
+      我的上游 API 密钥
+    </div>
+    <div class="alert">
+      <i class="fas fa-info-circle alert-icon"></i>
+      <div>添加您自己的上游 API 密钥，您的下线将优先使用您的密钥，享受更低的成本价。</div>
+    </div>
+    
+    <form id="upstreamForm" style="background:var(--bg);padding:20px;border-radius:12px;margin-bottom:20px;">
+      <div class="form-grid">
+        <div class="form-item">
+          <label>API 名称</label>
+          <input type="text" name="name" placeholder="如：我的MiniMax密钥" required>
+        </div>
+        <div class="form-item">
+          <label>供应商</label>
+          <select name="provider" required>
+            <option value="">选择供应商</option>
+            <option value="minimax">MiniMax</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="volcengine">火山引擎</option>
+            <option value="openai">OpenAI</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-item">
+          <label>API Key</label>
+          <input type="password" name="api_key" placeholder="sk-xxxx" required>
+        </div>
+        <div class="form-item">
+          <label>Base URL</label>
+          <input type="text" name="base_url" placeholder="https://api.minimax.chat/v1">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-item">
+          <label>成本价 (元/千tokens)</label>
+          <input type="number" name="price_per_1k" step="0.0001" placeholder="0.001" required>
+        </div>
+        <div class="form-item">
+          <label>默认模型</label>
+          <input type="text" name="model" placeholder="MiniMax-Text-01">
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> 添加密钥</button>
+      </div>
+    </form>
+    
+    <div id="upstreamList">
+      <div style="text-align:center;padding:40px;color:var(--text-secondary);">
+        <i class="fas fa-spinner fa-spin"></i> 加载中...
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-history"></i>
+      价格设置历史
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>时间</th>
+          <th>加价率</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        <tr>
+          <td colspan="3" style="text-align:center;padding:40px;color:var(--text-secondary);">
+            暂无历史记录
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+let currentMarkup = 1.5;
+
+function updateMarkupValue() {
+  const value = document.getElementById('markupSlider').value;
+  currentMarkup = parseFloat(value);
+  document.getElementById('markupValue').innerHTML = value + '<small>×</small>';
+  
+  // 更新价格预览
+  const basePrice = 0.001; // 假设平台成本价
+  const yourPrice = (basePrice * currentMarkup).toFixed(6);
+  const profit = (basePrice * (currentMarkup - 1)).toFixed(6);
+  
+  document.getElementById('pricePreviewText').innerHTML = `
+    <strong>价格预览（以 0.001元/千tokens 为例）：</strong><br>
+    平台成本价：¥0.001<br>
+    您的售价：¥${yourPrice}<br>
+    每千tokens利润：¥${profit}
+  `;
+}
+
+document.getElementById('pricingForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const msg = document.getElementById('msg');
+  msg.className = 'msg';
+  msg.style.display = 'block';
+  msg.textContent = '保存中...';
+  
+  try {
+    const res = await fetch('/api/agent/markup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ markup_rate: currentMarkup })
+    });
+    const json = await res.json();
+    
+    if (json.code === 0) {
+      msg.textContent = '✓ 保存成功！';
+      msg.className = 'msg success';
+    } else {
+      msg.textContent = json.msg || '保存失败';
+      msg.className = 'msg error';
+    }
+  } catch(e) {
+    msg.textContent = '网络异常';
+    msg.className = 'msg error';
+  }
+  
+  setTimeout(() => msg.style.display = 'none', 3000);
+});
+
+function resetToDefault() {
+  document.getElementById('markupSlider').value = 1.5;
+  updateMarkupValue();
+}
+
+async function loadUpstreamApis() {
+  try {
+    const res = await fetch('/api/agent/upstream_apis');
+    const json = await res.json();
+    
+    if (json.code === 0 && json.data && json.data.length > 0) {
+      document.getElementById('upstreamList').innerHTML = json.data.map(api => `
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <div class="api-name">${api.name}</div>
+              <div class="api-provider">${api.provider} · ${api.model || '-'}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="badge ${api.is_active ? 'badge-success' : 'badge-danger'}">${api.is_active ? '启用' : '禁用'}</span>
+              <button class="btn btn-sm btn-danger" onclick="deleteUpstreamApi('${api.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="api-price">¥${parseFloat(api.price_per_1k).toFixed(4)}/千tokens</div>
+          <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">
+            加价后售价：¥${(api.price_per_1k * currentMarkup).toFixed(4)}/千tokens
+          </div>
+        </div>
+      `).join('');
+    } else {
+      document.getElementById('upstreamList').innerHTML = `
+        <div style="text-align:center;padding:40px;color:var(--text-secondary);">
+          <div style="font-size:2rem;margin-bottom:8px;">🔑</div>
+          <p>暂无上游密钥</p>
+          <p style="font-size:0.85rem;margin-top:4px;">添加您的专属 API 密钥，享受更低成本</p>
+        </div>
+      `;
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+document.getElementById('upstreamForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData.entries());
+  
+  try {
+    const res = await fetch('/api/agent/upstream_apis', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    
+    if (json.code === 0) {
+      alert('添加成功');
+      this.reset();
+      loadUpstreamApis();
+    } else {
+      alert(json.msg || '添加失败');
+    }
+  } catch(e) {
+    alert('添加失败');
+  }
+});
+
+async function deleteUpstreamApi(id) {
+  if (!confirm('确认删除此密钥？')) return;
+  try {
+    await fetch('/api/agent/upstream_apis/' + id, { method: 'DELETE' });
+    loadUpstreamApis();
+  } catch(e) {}
+}
+
+// 初始化
+updateMarkupValue();
+loadUpstreamApis();
+</script>
+</body>
+</html>

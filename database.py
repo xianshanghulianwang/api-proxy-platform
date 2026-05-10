@@ -67,6 +67,7 @@ def init_db():
             commission_rate_l1 REAL DEFAULT 0.10,
             commission_rate_l2 REAL DEFAULT 0.05,
             commission_rate_l3 REAL DEFAULT 0.02,
+            markup_rate REAL DEFAULT 1.5,
             total_commission REAL DEFAULT 0,
             withdrawable_balance REAL DEFAULT 0,
             total_withdrawal REAL DEFAULT 0,

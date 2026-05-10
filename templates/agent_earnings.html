@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>收益设置 - 终点</title>
+<style>
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+a { text-decoration: none; color: inherit; }
+.header { background: linear-gradient(135deg, var(--primary), #8b5cf6); color: white; padding: 30px; }
+.header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.header p { font-size: 0.9rem; opacity: 0.9; }
+.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+.nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.nav a { padding: 10px 20px; background: white; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+.nav a:hover, .nav a.active { background: var(--primary); color: white; }
+.card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.card-title i { color: var(--primary); }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: linear-gradient(135deg, var(--primary), #8b5cf6); color: white; padding: 24px; border-radius: 16px; text-align: center; }
+.stat-card.green { background: linear-gradient(135deg, var(--success), #34d399); }
+.stat-card.orange { background: linear-gradient(135deg, var(--warning), #fbbf24); }
+.stat-value { font-size: 2rem; font-weight: 700; }
+.stat-label { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
+.form-item { display: flex; flex-direction: column; gap: 6px; }
+.form-item.full { grid-column: span 2; }
+.form-item label { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.form-item label span { color: var(--text-secondary); font-weight: 400; }
+.form-item input, .form-item select { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-family: inherit; outline: none; transition: all 0.3s; }
+.form-item input:focus, .form-item select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.form-item input[type="range"] { padding: 0; border: none; }
+.range-value { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
+.range-value strong { color: var(--primary); font-size: 1.1rem; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.msg { padding: 14px 18px; border-radius: 12px; margin-top: 16px; font-size: 0.9rem; display: none; }
+.msg.success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
+.msg.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+.alert { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; font-size: 0.9rem; display: flex; align-items: flex-start; gap: 12px; }
+.alert-icon { color: var(--primary); font-size: 1.1rem; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: 14px; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); background: var(--bg); }
+.table td { padding: 14px; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+.table tr:hover td { background: #f8fafc; }
+.badge { display: inline-flex; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+.badge-primary { background: rgba(99,102,241,0.1); color: var(--primary); }
+.badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
+.badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
+.tier-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.tier-card { background: white; border: 2px solid var(--border); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s; }
+.tier-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+.tier-card.active { border-color: var(--primary); background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(139,92,246,0.05)); }
+.tier-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.tier-name { font-weight: 700; margin-bottom: 4px; }
+.tier-rate { color: var(--primary); font-size: 1.2rem; font-weight: 700; }
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-item.full { grid-column: span 1; }
+  .tier-list { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>💰 收益设置</h1>
+  <p>设置您的定价策略，查看收益报表</p>
+</div>
+
+<div class="container">
+  <div class="nav">
+    <a href="/agent/dashboard">总览</a>
+    <a href="/agent/earnings">收益设置</a>
+    <a href="/agent/pricing">我的定价</a>
+    <a href="/agent/users">下线管理</a>
+    <a href="/agent/commissions">佣金记录</a>
+    <a href="/agent/withdraw">提现</a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card green">
+      <div class="stat-value" id="totalEarnings">¥0</div>
+      <div class="stat-label">累计收益</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="monthlyEarnings">¥0</div>
+      <div class="stat-label">本月收益</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-value" id="pendingEarnings">¥0</div>
+      <div class="stat-label">待结算佣金</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-tags"></i>
+      我的代理等级
+    </div>
+    <div class="tier-list" id="tierList">
+      <!-- 动态加载 -->
+    </div>
+    <div class="alert">
+      <i class="fas fa-info-circle alert-icon"></i>
+      <div>
+        <strong>代理等级说明：</strong><br>
+        不同等级享有不同的佣金比例。升级到更高等级可获得更多佣金分成。佣金按月结算，自动转入可提现余额。
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-coins"></i>
+      下线消费收益明细
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>下线用户</th>
+          <th>累计充值</th>
+          <th>我的佣金比例</th>
+          <th>累计获得佣金</th>
+          <th>最近佣金</th>
+        </tr>
+      </thead>
+      <tbody id="downlineEarningsBody">
+        <tr><td colspan="5" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-chart-pie"></i>
+      收益统计
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+      <div style="text-align:center;padding:20px;background:var(--bg);border-radius:12px;">
+        <div style="font-size:2rem;font-weight:700;color:var(--primary);" id="l1Commission">¥0</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;">一级佣金</div>
+      </div>
+      <div style="text-align:center;padding:20px;background:var(--bg);border-radius:12px;">
+        <div style="font-size:2rem;font-weight:700;color:var(--success);" id="l2Commission">¥0</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;">二级佣金</div>
+      </div>
+      <div style="text-align:center;padding:20px;background:var(--bg);border-radius:12px;">
+        <div style="font-size:2rem;font-weight:700;color:var(--warning);" id="l3Commission">¥0</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;">三级佣金</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadEarningsData() {
+  try {
+    // 加载用户信息
+    const userRes = await fetch('/api/user/info');
+    const userJson = await userRes.json();
+    if (userJson.code !== 0) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    // 加载代理信息
+    const agentRes = await fetch('/api/agent/commissions');
+    const agentJson = await agentRes.json();
+    
+    // 加载下线收益
+    const downlineRes = await fetch('/api/agent/downlines');
+    const downlineJson = await downlineRes.json();
+    
+    const commissions = agentJson.data || [];
+    const downlines = downlineJson.data || [];
+    
+    // 统计各级佣金
+    let l1Total = 0, l2Total = 0, l3Total = 0;
+    commissions.forEach(c => {
+      if (c.level === 1) l1Total += c.commission;
+      else if (c.level === 2) l2Total += c.commission;
+      else if (c.level === 3) l3Total += c.commission;
+    });
+    
+    document.getElementById('l1Commission').textContent = '¥' + l1Total.toFixed(2);
+    document.getElementById('l2Commission').textContent = '¥' + l2Total.toFixed(2);
+    document.getElementById('l3Commission').textContent = '¥' + l3Total.toFixed(2);
+    
+    document.getElementById('totalEarnings').textContent = '¥' + (l1Total + l2Total + l3Total).toFixed(2);
+    
+    // 加载代理等级
+    const tierRes = await fetch('/api/agent/tiers');
+    const tierJson = await tierRes.json();
+    
+    if (tierJson.code === 0 && tierJson.data) {
+      const currentTier = tierJson.data.find(t => t.id === userJson.data.tier_id);
+      renderTierList(tierJson.data, currentTier);
+    }
+    
+    // 渲染下线收益
+    renderDownlineEarnings(downlines, commissions);
+    
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderTierList(tiers, currentTier) {
+  const tierIcons = { '铜牌代理': '🥉', '银牌代理': '🥈', '金牌代理': '🥇', '钻石代理': '💎' };
+  document.getElementById('tierList').innerHTML = tiers.map(t => `
+    <div class="tier-card ${currentTier && t.id === currentTier.id ? 'active' : ''}">
+      <div class="tier-icon">${tierIcons[t.name] || '📦'}</div>
+      <div class="tier-name">${t.name}</div>
+      <div class="tier-rate">${(t.commission_l1 * 100).toFixed(0)}%</div>
+      <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">一级佣金比例</div>
+      ${currentTier && t.id === currentTier.id ? '<span class="badge badge-success" style="margin-top:8px;">当前等级</span>' : ''}
+    </div>
+  `).join('');
+}
+
+function renderDownlineEarnings(downlines, commissions) {
+  if (downlines.length === 0) {
+    document.getElementById('downlineEarningsBody').innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;padding:40px;color:var(--text-secondary);">
+          <div style="font-size:2rem;margin-bottom:8px;">👥</div>
+          暂无下线用户
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  document.getElementById('downlineEarningsBody').innerHTML = downlines.map(d => {
+    // 计算该下线贡献的佣金
+    const contribution = commissions.filter(c => c.user_id === d.id).reduce((s, c) => s + c.commission, 0);
+    const lastCommission = commissions.find(c => c.user_id === d.id);
+    
+    return `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--primary),#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;">
+              ${(d.username || 'U').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight:600;">${d.username}</div>
+              <div style="font-size:0.78rem;color:var(--text-secondary);">${d.phone || '-'}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-weight:600;">¥${(d.total_recharge || 0).toFixed(2)}</td>
+        <td><span class="badge badge-primary">${((d.commission_rate || 0.1) * 100).toFixed(0)}%</span></td>
+        <td style="font-weight:700;color:var(--success);">+¥${contribution.toFixed(2)}</td>
+        <td style="color:var(--text-secondary);">${lastCommission ? new Date(lastCommission.created_at).toLocaleDateString() : '-'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+loadEarningsData();
+</script>
+</body>
+</html>
