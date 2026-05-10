@@ -943,6 +943,324 @@ async def api_proxy_chat(request: Request, api_key: str = Form(None)):
         conn.close()
         return JSONResponse({"error": {"message": f"上游API错误: {str(e)}", "type": "server_error"}}, status_code=502)
 
+# ==================== 管理后台 API ====================
+
+def require_admin(request: Request) -> dict:
+    """验证管理员权限"""
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="请先登录")
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="需要管理员权限")
+    return user
+
+@app.get("/api/admin/overview")
+async def api_admin_overview(request: Request):
+    """管理后台概览数据"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # 用户统计
+    cur.execute("SELECT COUNT(*) as cnt FROM users")
+    total_users = cur.fetchone()["cnt"]
+    
+    # 订单统计
+    cur.execute("SELECT COUNT(*) as cnt, SUM(amount) as total FROM orders WHERE status='paid'")
+    order_stats = cur.fetchone()
+    total_orders = order_stats["cnt"] or 0
+    total_revenue = float(order_stats["total"] or 0)
+    
+    # 代理统计
+    cur.execute("SELECT COUNT(*) as cnt FROM agents WHERE status='active'")
+    total_agents = cur.fetchone()["cnt"]
+    
+    # 待处理订单
+    cur.execute("SELECT COUNT(*) as cnt FROM orders WHERE status='pending'")
+    pending_orders = cur.fetchone()["cnt"]
+    
+    # Token消耗
+    cur.execute("SELECT SUM(input_tokens + output_tokens) as total FROM usage_logs")
+    total_tokens = cur.fetchone()["total"] or 0
+    
+    conn.close()
+    
+    return JSONResponse({"code": 0, "data": {
+        "total_users": total_users,
+        "active_users_7d": total_users,
+        "total_orders": total_orders,
+        "total_revenue": total_revenue,
+        "pending_orders": pending_orders,
+        "total_tokens": total_tokens,
+        "total_agents": total_agents
+    }})
+
+@app.get("/api/admin/users")
+async def api_admin_users(request: Request):
+    """获取所有用户"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users ORDER BY created_at DESC")
+    users = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    # 检查是否为代理
+    for u in users:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM agents WHERE user_id=?", (u["id"],))
+        agent = cur.fetchone()
+        u["is_agent"] = agent is not None
+        conn.close()
+    
+    return JSONResponse({"code": 0, "data": users})
+
+@app.get("/api/admin/agents")
+async def api_admin_agents(request: Request):
+    """获取所有代理"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT a.*, u.username, u.phone, t.name as tier_name,
+               (SELECT COUNT(*) FROM users WHERE agent_id = a.id) as total_downlines
+        FROM agents a
+        JOIN users u ON a.user_id = u.id
+        LEFT JOIN agent_tiers t ON a.tier_id = t.id
+        ORDER BY a.created_at DESC
+    """)
+    agents = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return JSONResponse({"code": 0, "agents": agents})
+
+@app.put("/api/admin/agents/{agent_id}/status")
+async def api_admin_toggle_agent(agent_id: str, request: Request, status: str = Form()):
+    """修改代理状态"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE agents SET status=? WHERE id=?", (status, agent_id))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "状态已更新"})
+
+@app.get("/api/admin/orders")
+async def api_admin_orders(request: Request):
+    """获取所有订单"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT o.*, u.username, p.name as package_name
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        LEFT JOIN packages p ON o.package_id = p.id
+        ORDER BY o.created_at DESC
+    """)
+    orders = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return JSONResponse({"code": 0, "orders": orders})
+
+@app.get("/api/admin/commissions")
+async def api_admin_commissions(request: Request, limit: int = 50):
+    """获取佣金记录"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT ac.*, u.username, a.referral_code as agent_code, a.user_id as agent_user_id,
+               (SELECT username FROM users WHERE id = a.user_id) as agent_username
+        FROM agent_commissions ac
+        JOIN users u ON ac.user_id = u.id
+        JOIN agents a ON ac.agent_id = a.id
+        ORDER BY ac.created_at DESC
+        LIMIT ?
+    """, (limit,))
+    commissions = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return JSONResponse({"code": 0, "commissions": commissions})
+
+@app.get("/api/admin/withdrawals")
+async def api_admin_withdrawals(request: Request):
+    """获取所有提现申请"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT w.*, a.user_id as agent_user_id,
+               (SELECT username FROM users WHERE id = a.user_id) as agent_username
+        FROM withdrawals w
+        JOIN agents a ON w.agent_id = a.id
+        ORDER BY w.created_at DESC
+    """)
+    withdrawals = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return JSONResponse({"code": 0, "withdrawals": withdrawals})
+
+@app.post("/api/admin/withdrawals/{withdraw_id}/approve")
+async def api_admin_approve_withdraw(withdraw_id: str, request: Request):
+    """批准提现"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE withdrawals SET status='approved', updated_at=? WHERE id=?", 
+                (datetime.now().isoformat(), withdraw_id))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "已批准"})
+
+@app.post("/api/admin/withdrawals/{withdraw_id}/reject")
+async def api_admin_reject_withdraw(withdraw_id: str, request: Request):
+    """拒绝提现"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # 获取提现金额并返还
+    cur.execute("SELECT amount, agent_id FROM withdrawals WHERE id=?", (withdraw_id,))
+    withdraw = cur.fetchone()
+    if withdraw:
+        cur.execute("UPDATE agents SET withdrawable_balance = withdrawable_balance + ? WHERE id=?",
+                   (withdraw["amount"], withdraw["agent_id"]))
+    
+    cur.execute("UPDATE withdrawals SET status='rejected', updated_at=? WHERE id=?",
+                (datetime.now().isoformat(), withdraw_id))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "已拒绝"})
+
+@app.post("/api/admin/packages")
+async def api_admin_create_package(request: Request):
+    """创建套餐"""
+    require_admin(request)
+    
+    data = await request.form()
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    package_id = str(uuid.uuid4())
+    now = datetime.now().isoformat()
+    
+    cur.execute("""
+        INSERT INTO packages (id, name, description, price, credits, validity_days, is_active, created_at)
+        VALUES (?,?,?,?,?,?,?,?)
+    """, (package_id, data.get("name"), data.get("description"), 
+          float(data.get("price", 0)), int(data.get("credits", 0)),
+          int(data.get("validity_days", 30)), 1, now))
+    
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "套餐已创建", "data": {"id": package_id}})
+
+@app.get("/api/admin/packages")
+async def api_admin_list_packages(request: Request):
+    """获取所有套餐"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM packages ORDER BY sort_order ASC, created_at DESC")
+    packages = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return JSONResponse({"code": 0, "data": packages})
+
+@app.delete("/api/admin/packages/{package_id}")
+async def api_admin_delete_package(package_id: str, request: Request):
+    """删除套餐"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE packages SET is_active=0 WHERE id=?", (package_id,))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "套餐已删除"})
+
+@app.post("/api/admin/api-keys")
+async def api_admin_create_api_key(request: Request):
+    """创建API Key"""
+    require_admin(request)
+    
+    data = await request.form()
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    key_id = str(uuid.uuid4())
+    now = datetime.now().isoformat()
+    
+    cur.execute("""
+        INSERT INTO api_keys (id, name, provider, api_key, base_url, model, price_per_1k, is_active, created_at)
+        VALUES (?,?,?,?,?,?,?,?,?)
+    """, (key_id, data.get("name"), data.get("provider"), data.get("api_key"),
+          data.get("base_url"), data.get("model"), float(data.get("price_per_1k", 0.001)),
+          1, now))
+    
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "API Key已添加", "data": {"id": key_id}})
+
+@app.get("/api/admin/api-keys")
+async def api_admin_list_api_keys(request: Request):
+    """获取所有API Keys"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM api_keys ORDER BY created_at DESC")
+    keys = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return JSONResponse({"code": 0, "data": keys})
+
+@app.delete("/api/admin/api-keys/{key_id}")
+async def api_admin_delete_api_key(key_id: str, request: Request):
+    """删除API Key"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM api_keys WHERE id=?", (key_id,))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "API Key已删除"})
+
+@app.delete("/api/admin/tiers/{tier_id}")
+async def api_admin_delete_tier(tier_id: str, request: Request):
+    """删除代理等级"""
+    require_admin(request)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE agent_tiers SET is_active=0 WHERE id=?", (tier_id,))
+    conn.commit()
+    conn.close()
+    
+    return JSONResponse({"code": 0, "msg": "等级已删除"})
+
 # ==================== 健康检查 ====================
 
 @app.get("/health")
